@@ -2,11 +2,24 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Menu, X } from "lucide-react";
+import { Menu, X, ShoppingCart, Heart } from "lucide-react";
 import { useState } from "react";
+
+import { useCart } from "@/app/context/CartContext";
+import { useWishlist } from "@/app/context/WishlistContext";
 
 export default function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const { cart } = useCart();
+  const { wishlist } = useWishlist();
+
+  const totalItems = cart.reduce(
+    (total, item) => total + item.quantity,
+    0
+  );
+
+  const wishlistCount = wishlist.length;
 
   return (
     <>
@@ -21,6 +34,7 @@ export default function Header() {
 
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white/95 backdrop-blur shadow-md">
+
         <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-3">
 
           {/* Logo */}
@@ -38,49 +52,84 @@ export default function Header() {
           {/* Desktop Menu */}
           <nav className="hidden lg:flex items-center gap-8 font-semibold text-gray-700">
 
-            <Link href="/" className="hover:text-green-700 transition">
+            <Link href="/" className="hover:text-green-700">
               Home
             </Link>
 
-            <Link href="/about" className="hover:text-green-700 transition">
+            <Link href="/about" className="hover:text-green-700">
               About
             </Link>
 
-            <Link href="/products" className="hover:text-green-700 transition">
+            <Link href="/products" className="hover:text-green-700">
               Products
             </Link>
 
-            <Link href="/why-us" className="hover:text-green-700 transition">
+            <Link href="/why-us" className="hover:text-green-700">
               Why Us
             </Link>
 
-            <Link href="/farmers" className="hover:text-green-700 transition">
+            <Link href="/farmers" className="hover:text-green-700">
               Farmers
             </Link>
 
-            <Link href="/blog" className="hover:text-green-700 transition">
+            <Link href="/blog" className="hover:text-green-700">
               Blog
             </Link>
 
-            <Link href="/contact" className="hover:text-green-700 transition">
+            <Link href="/contact" className="hover:text-green-700">
               Contact
             </Link>
 
           </nav>
 
           {/* Right Side */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-5">
 
+            {/* Wishlist */}
+            <Link
+              href="/wishlist"
+              className="relative flex items-center justify-center"
+            >
+              <Heart
+                size={28}
+                className="text-red-500"
+              />
+
+              {wishlistCount > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center">
+                  {wishlistCount}
+                </span>
+              )}
+            </Link>
+
+            {/* Cart */}
+            <Link
+              href="/cart"
+              className="relative flex items-center justify-center"
+            >
+              <ShoppingCart
+                size={30}
+                className="text-green-700"
+              />
+
+              {totalItems > 0 && (
+                <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center">
+                  {totalItems}
+                </span>
+              )}
+            </Link>
+
+            {/* WhatsApp */}
             <a
               href="https://wa.me/917895943324"
               target="_blank"
               rel="noopener noreferrer"
-              className="hidden md:block bg-green-700 hover:bg-green-800 text-white px-6 py-3 rounded-full font-semibold transition"
+              className="hidden md:block bg-green-700 hover:bg-green-800 text-white px-6 py-3 rounded-full font-semibold"
             >
               Order Now
             </a>
 
-            {/* Mobile Menu Button */}
+            {/* Mobile Menu */}
             <button
               className="lg:hidden"
               onClick={() => setMenuOpen(!menuOpen)}
@@ -93,11 +142,11 @@ export default function Header() {
         </div>
 
         {/* Mobile Menu */}
-
         {menuOpen && (
+
           <div className="lg:hidden bg-white border-t">
 
-            <nav className="flex flex-col p-6 gap-5 font-semibold">
+            <nav className="flex flex-col gap-5 p-6 font-semibold">
 
               <Link href="/" onClick={() => setMenuOpen(false)}>
                 Home
@@ -116,7 +165,7 @@ export default function Header() {
               </Link>
 
               <Link href="/farmers" onClick={() => setMenuOpen(false)}>
-                Farmer Stories
+                Farmers
               </Link>
 
               <Link href="/blog" onClick={() => setMenuOpen(false)}>
@@ -125,6 +174,20 @@ export default function Header() {
 
               <Link href="/contact" onClick={() => setMenuOpen(false)}>
                 Contact
+              </Link>
+
+              <Link
+                href="/wishlist"
+                onClick={() => setMenuOpen(false)}
+              >
+                ❤️ Wishlist ({wishlistCount})
+              </Link>
+
+              <Link
+                href="/cart"
+                onClick={() => setMenuOpen(false)}
+              >
+                🛒 Cart ({totalItems})
               </Link>
 
               <a
@@ -139,6 +202,7 @@ export default function Header() {
             </nav>
 
           </div>
+
         )}
 
       </header>
