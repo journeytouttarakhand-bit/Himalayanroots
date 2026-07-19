@@ -1,4 +1,4 @@
-export default function WhyUs() {
+export default function WhyUsPage() {
   const items = [
     {
       title: "Farmer Direct",
