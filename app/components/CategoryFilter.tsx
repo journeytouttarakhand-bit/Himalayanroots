@@ -1,21 +1,13 @@
 "use client";
 
 type CategoryFilterProps = {
+  categories: string[];
   selectedCategory: string;
   setSelectedCategory: (category: string) => void;
 };
 
-const categories = [
-  "All",
-  "Ghee",
-  "Honey",
-  "Pulses",
-  "Sweets",
-  "Fruits",
-  "Vegetables",
-];
-
 export default function CategoryFilter({
+  categories,
   selectedCategory,
   setSelectedCategory,
 }: CategoryFilterProps) {

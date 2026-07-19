@@ -19,14 +19,45 @@ type Order = {
   createdAt: string;
 };
 
+type DashboardStats = {
+  totalProducts: number;
+  activeProducts: number;
+  inactiveProducts: number;
+  featuredProducts: number;
+  outOfStockProducts: number;
+  totalStock: number;
+};
+
+type RecentProduct = {
+  _id: string;
+  name: string;
+  category: string;
+  price: number;
+  stock: number;
+  image: string;
+};
+
 export default function Dashboard() {
   const router = useRouter();
 
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [stats, setStats] = useState<DashboardStats>({
+    totalProducts: 0,
+    activeProducts: 0,
+    inactiveProducts: 0,
+    featuredProducts: 0,
+    outOfStockProducts: 0,
+    totalStock: 0,
+  });
+
+  const [recentProducts, setRecentProducts] =
+    useState<RecentProduct[]>([]);
+
   useEffect(() => {
-    const loggedIn = localStorage.getItem("adminLoggedIn");
+    const loggedIn =
+      localStorage.getItem("adminLoggedIn");
 
     if (!loggedIn) {
       router.push("/admin/login");
@@ -34,11 +65,32 @@ export default function Dashboard() {
     }
 
     fetchOrders();
+    fetchDashboard();
   }, [router]);
+
+  async function fetchDashboard() {
+    try {
+      const res = await fetch(
+        "/api/admin/dashboard"
+      );
+
+      const data = await res.json();
+
+      if (data.success) {
+        setStats(data.stats);
+        setRecentProducts(
+          data.recentProducts
+        );
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  }
 
   async function fetchOrders() {
     try {
       const res = await fetch("/api/orders");
+
       const data = await res.json();
 
       if (data.success) {
@@ -50,8 +102,10 @@ export default function Dashboard() {
       setLoading(false);
     }
   }
-
-  async function updateStatus(id: string, orderStatus: string) {
+  async function updateStatus(
+    id: string,
+    orderStatus: string
+  ) {
     try {
       const res = await fetch(`/api/orders/${id}`, {
         method: "PATCH",
@@ -108,6 +162,173 @@ export default function Dashboard() {
 
       </div>
 
+      {/* Dashboard Statistics */}
+
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5 mb-10">
+
+        <div className="bg-white rounded-xl shadow p-5 border">
+          <p className="text-gray-500 text-sm">
+            Total Products
+          </p>
+          <h2 className="text-3xl font-bold text-green-700 mt-2">
+            {stats.totalProducts}
+          </h2>
+        </div>
+
+        <div className="bg-white rounded-xl shadow p-5 border">
+          <p className="text-gray-500 text-sm">
+            Active
+          </p>
+          <h2 className="text-3xl font-bold text-blue-600 mt-2">
+            {stats.activeProducts}
+          </h2>
+        </div>
+
+        <div className="bg-white rounded-xl shadow p-5 border">
+          <p className="text-gray-500 text-sm">
+            Featured
+          </p>
+          <h2 className="text-3xl font-bold text-yellow-600 mt-2">
+            {stats.featuredProducts}
+          </h2>
+        </div>
+
+        <div className="bg-white rounded-xl shadow p-5 border">
+          <p className="text-gray-500 text-sm">
+            Out Of Stock
+          </p>
+          <h2 className="text-3xl font-bold text-red-600 mt-2">
+            {stats.outOfStockProducts}
+          </h2>
+        </div>
+
+        <div className="bg-white rounded-xl shadow p-5 border">
+          <p className="text-gray-500 text-sm">
+            Total Stock
+          </p>
+          <h2 className="text-3xl font-bold text-purple-600 mt-2">
+            {stats.totalStock}
+          </h2>
+        </div>
+
+        <div className="bg-green-700 text-white rounded-xl shadow p-5">
+          <p className="text-sm">
+            Total Orders
+          </p>
+          <h2 className="text-3xl font-bold mt-2">
+            {orders.length}
+          </h2>
+        </div>
+
+      </div>
+      {/* Recent Products */}
+
+      <div className="bg-white rounded-xl shadow-lg border p-6 mb-10">
+
+        <h2 className="text-2xl font-bold text-green-900 mb-6">
+          Recent Products
+        </h2>
+
+        {recentProducts.length === 0 ? (
+
+          <p className="text-gray-500">
+            No Products Found
+          </p>
+
+        ) : (
+
+          <div className="overflow-x-auto">
+
+            <table className="w-full">
+
+              <thead>
+
+                <tr className="border-b">
+
+                  <th className="text-left py-3">
+                    Image
+                  </th>
+
+                  <th className="text-left py-3">
+                    Name
+                  </th>
+
+                  <th className="text-left py-3">
+                    Category
+                  </th>
+
+                  <th className="text-left py-3">
+                    Price
+                  </th>
+
+                  <th className="text-left py-3">
+                    Stock
+                  </th>
+
+                </tr>
+
+              </thead>
+
+              <tbody>
+
+                {recentProducts.map((product) => (
+
+                  <tr
+                    key={product._id}
+                    className="border-b hover:bg-gray-50"
+                  >
+
+                    <td className="py-3">
+
+                      <img
+                        src={product.image}
+                        alt={product.name}
+                        className="w-16 h-16 rounded-lg object-cover border"
+                      />
+
+                    </td>
+
+                    <td className="font-semibold">
+                      {product.name}
+                    </td>
+
+                    <td>
+                      {product.category}
+                    </td>
+
+                    <td>
+                      ₹{product.price}
+                    </td>
+
+                    <td>
+
+                      <span
+                        className={`font-semibold ${
+                          product.stock === 0
+                            ? "text-red-600"
+                            : "text-green-700"
+                        }`}
+                      >
+                        {product.stock}
+                      </span>
+
+                    </td>
+
+                  </tr>
+
+                ))}
+
+              </tbody>
+
+            </table>
+
+          </div>
+
+        )}
+
+      </div>
+
+      {/* Orders */}
       <div className="bg-green-700 text-white rounded-xl p-6 mb-8">
 
         <h2 className="text-2xl font-bold">
@@ -117,10 +338,13 @@ export default function Dashboard() {
       </div>
 
       {orders.length === 0 ? (
+
         <div className="text-center text-xl">
           No Orders Found
         </div>
+
       ) : (
+
         <div className="space-y-6">
 
           {orders.map((order) => (
@@ -216,6 +440,7 @@ export default function Dashboard() {
           ))}
 
         </div>
+
       )}
 
     </div>

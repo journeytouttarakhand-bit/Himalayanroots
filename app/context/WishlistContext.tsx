@@ -9,7 +9,7 @@ import {
 } from "react";
 
 export type WishlistItem = {
-  id: number;
+  id: string;
   slug: string;
   name: string;
   price: number;
@@ -19,8 +19,8 @@ export type WishlistItem = {
 type WishlistContextType = {
   wishlist: WishlistItem[];
   addToWishlist: (item: WishlistItem) => void;
-  removeFromWishlist: (id: number) => void;
-  isInWishlist: (id: number) => boolean;
+  removeFromWishlist: (id: string) => void;
+  isInWishlist: (id: string) => boolean;
 };
 
 const WishlistContext = createContext<
@@ -34,7 +34,6 @@ export function WishlistProvider({
 }) {
   const [wishlist, setWishlist] = useState<WishlistItem[]>([]);
 
-  // Load Wishlist from Local Storage
   useEffect(() => {
     const storedWishlist = localStorage.getItem("wishlist");
 
@@ -43,7 +42,6 @@ export function WishlistProvider({
     }
   }, []);
 
-  // Save Wishlist to Local Storage
   useEffect(() => {
     localStorage.setItem(
       "wishlist",
@@ -63,13 +61,13 @@ export function WishlistProvider({
     });
   };
 
-  const removeFromWishlist = (id: number) => {
+  const removeFromWishlist = (id: string) => {
     setWishlist((prev) =>
       prev.filter((item) => item.id !== id)
     );
   };
 
-  const isInWishlist = (id: number) => {
+  const isInWishlist = (id: string) => {
     return wishlist.some(
       (item) => item.id === id
     );

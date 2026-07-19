@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Heart } from "lucide-react";
@@ -9,16 +9,34 @@ import SearchBar from "./SearchBar";
 import CategoryFilter from "./CategoryFilter";
 import Toast from "./Toast";
 
-import { products } from "@/data/products";
 import { useCart } from "@/app/context/CartContext";
 import { useWishlist } from "@/app/context/WishlistContext";
 
+type Product = {
+  _id: string;
+  name: string;
+  slug: string;
+  category: string;
+  description: string;
+  price: number;
+  stock: number;
+  image: string;
+  rating: number;
+  featured: boolean;
+  active: boolean;
+};
+
 export default function Products() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const [search, setSearch] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [selectedCategory, setSelectedCategory] =
+    useState("All");
 
   const [showToast, setShowToast] = useState(false);
-  const [toastMessage, setToastMessage] = useState("");
+  const [toastMessage, setToastMessage] =
+    useState("");
 
   const { addToCart } = useCart();
 
@@ -28,28 +46,71 @@ export default function Products() {
     isInWishlist,
   } = useWishlist();
 
-  const filteredProducts = products.filter((product) => {
-    const matchesSearch = product.name
-      .toLowerCase()
-      .includes(search.toLowerCase());
+  useEffect(() => {
+  async function loadProducts() {
+    try {
+      const res = await fetch("/api/all-products", {
+        cache: "no-store",
+      });
 
-    const matchesCategory =
-      selectedCategory === "All" ||
-      product.category === selectedCategory;
+      const data = await res.json();
 
-    return matchesSearch && matchesCategory;
-  });
+      if (data.success) {
+        setProducts(
+          data.products.filter(
+            (item: Product) => item.active
+          )
+        );
+      }
+    } catch (error) {
+      console.error("Products Error:", error);
+    } finally {
+      setLoading(false);
+    }
+  }
 
-  function handleAddToCart(product: (typeof products)[0]) {
+  loadProducts();
+}, []);
+
+  const categories = useMemo(() => {
+    return [
+      "All",
+      ...new Set(
+        products.map((item) => item.category)
+      ),
+    ];
+  }, [products]);
+
+  const filteredProducts = products.filter(
+    (product) => {
+      const matchesSearch = product.name
+        .toLowerCase()
+        .includes(search.toLowerCase());
+
+      const matchesCategory =
+        selectedCategory === "All" ||
+        product.category ===
+          selectedCategory;
+
+      return (
+        matchesSearch && matchesCategory
+      );
+    }
+  );
+
+  function handleAddToCart(product: Product) {
     addToCart({
-      id: product.id,
+      id: product._id,
       slug: product.slug,
       name: product.name,
       price: product.price,
       image: product.image,
     });
 
-    setToastMessage(`${product.name} added to cart`);
+    setToastMessage(
+      `${product.name} added to cart`
+    );
+
     setShowToast(true);
 
     setTimeout(() => {
@@ -57,21 +118,25 @@ export default function Products() {
     }, 3000);
   }
 
-  function handleWishlist(product: (typeof products)[0]) {
-    if (isInWishlist(product.id)) {
-      removeFromWishlist(product.id);
+  function handleWishlist(product: Product) {
+    if (isInWishlist(product._id)) {
+      removeFromWishlist(product._id);
 
-      setToastMessage(`${product.name} removed from wishlist`);
+      setToastMessage(
+        `${product.name} removed from wishlist`
+      );
     } else {
       addToWishlist({
-        id: product.id,
+        id: product._id,
         slug: product.slug,
         name: product.name,
         price: product.price,
         image: product.image,
       });
 
-      setToastMessage(`${product.name} added to wishlist`);
+      setToastMessage(
+        `${product.name} added to wishlist`
+      );
     }
 
     setShowToast(true);
@@ -83,7 +148,6 @@ export default function Products() {
 
   return (
     <section className="py-20 bg-green-50">
-
       <Toast
         message={toastMessage}
         show={showToast}
@@ -96,35 +160,46 @@ export default function Products() {
         </h2>
 
         <p className="text-center text-gray-600 max-w-2xl mx-auto mb-10">
-          Authentic Himalayan products sourced directly from Uttarakhand
-          farmers.
+          Authentic Himalayan products sourced directly
+          from Uttarakhand farmers.
         </p>
 
         <SearchBar
           search={search}
           setSearch={setSearch}
         />
-
         <CategoryFilter
+          categories={categories}
           selectedCategory={selectedCategory}
           setSelectedCategory={setSelectedCategory}
         />
 
-        {filteredProducts.length === 0 ? (
+        {loading ? (
+          <div className="text-center py-20">
+
+            <p className="text-xl text-gray-600">
+              Loading Products...
+            </p>
+
+          </div>
+        ) : filteredProducts.length === 0 ? (
+
           <div className="text-center text-red-600 text-xl mt-10">
             No products found.
           </div>
+
         ) : (
+
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-8">
 
             {filteredProducts.map((product) => (
 
               <div
-                key={product.id}
+                key={product._id}
                 className="relative bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition duration-300 hover:-translate-y-2"
               >
 
-                {/* Wishlist Button */}
+                {/* Wishlist */}
 
                 <button
                   onClick={() => handleWishlist(product)}
@@ -134,7 +209,7 @@ export default function Products() {
                   <Heart
                     size={24}
                     className={
-                      isInWishlist(product.id)
+                      isInWishlist(product._id)
                         ? "fill-red-500 text-red-500"
                         : "text-gray-500"
                     }
@@ -178,25 +253,33 @@ export default function Products() {
                     </span>
 
                     <span className="text-green-700">
-                      {product.stock}
+                      {product.stock > 0
+                        ? "In Stock"
+                        : "Out of Stock"}
                     </span>
 
                   </div>
 
                   <div className="mt-6 flex gap-3">
-
                     <Link
                       href={`/products/${product.slug}`}
-                      className="flex-1 text-center bg-gray-200 hover:bg-gray-300 py-3 rounded-xl font-semibold"
+                      className="flex-1 text-center bg-gray-200 hover:bg-gray-300 py-3 rounded-xl font-semibold transition"
                     >
                       View Details
                     </Link>
 
                     <button
                       onClick={() => handleAddToCart(product)}
-                      className="flex-1 bg-green-700 hover:bg-green-800 text-white py-3 rounded-xl font-semibold"
+                      disabled={product.stock <= 0}
+                      className={`flex-1 py-3 rounded-xl font-semibold text-white transition ${
+                        product.stock > 0
+                          ? "bg-green-700 hover:bg-green-800"
+                          : "bg-gray-400 cursor-not-allowed"
+                      }`}
                     >
-                      Add to Cart
+                      {product.stock > 0
+                        ? "Add to Cart"
+                        : "Out of Stock"}
                     </button>
 
                   </div>
@@ -208,6 +291,7 @@ export default function Products() {
             ))}
 
           </div>
+
         )}
 
       </div>

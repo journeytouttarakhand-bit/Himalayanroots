@@ -9,7 +9,7 @@ import {
 } from "react";
 
 export type CartItem = {
-  id: number;
+  id: string;
   slug: string;
   name: string;
   price: number;
@@ -20,9 +20,9 @@ export type CartItem = {
 type CartContextType = {
   cart: CartItem[];
   addToCart: (item: Omit<CartItem, "quantity">) => void;
-  removeFromCart: (id: number) => void;
-  increaseQuantity: (id: number) => void;
-  decreaseQuantity: (id: number) => void;
+  removeFromCart: (id: string) => void;
+  increaseQuantity: (id: string) => void;
+  decreaseQuantity: (id: string) => void;
   clearCart: () => void;
 };
 
@@ -35,7 +35,6 @@ export function CartProvider({
 }) {
   const [cart, setCart] = useState<CartItem[]>([]);
 
-  // Load cart from Local Storage
   useEffect(() => {
     const storedCart = localStorage.getItem("cart");
 
@@ -44,7 +43,6 @@ export function CartProvider({
     }
   }, []);
 
-  // Save cart to Local Storage
   useEffect(() => {
     localStorage.setItem("cart", JSON.stringify(cart));
   }, [cart]);
@@ -74,13 +72,13 @@ export function CartProvider({
     });
   };
 
-  const removeFromCart = (id: number) => {
+  const removeFromCart = (id: string) => {
     setCart((prev) =>
       prev.filter((item) => item.id !== id)
     );
   };
 
-  const increaseQuantity = (id: number) => {
+  const increaseQuantity = (id: string) => {
     setCart((prev) =>
       prev.map((item) =>
         item.id === id
@@ -93,7 +91,7 @@ export function CartProvider({
     );
   };
 
-  const decreaseQuantity = (id: number) => {
+  const decreaseQuantity = (id: string) => {
     setCart((prev) =>
       prev
         .map((item) =>

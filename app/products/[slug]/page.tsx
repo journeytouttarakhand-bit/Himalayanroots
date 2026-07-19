@@ -2,7 +2,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { products } from "@/data/products";
 import { reviews } from "@/data/reviews";
 import RelatedProducts from "@/app/components/RelatedProducts";
 
@@ -12,10 +11,52 @@ type Props = {
   }>;
 };
 
-export default async function ProductPage({ params }: Props) {
+type Product = {
+  _id: string;
+  name: string;
+  slug: string;
+  category: string;
+  description: string;
+  price: number;
+  stock: number;
+  image: string;
+  rating: number;
+  featured: boolean;
+  active: boolean;
+};
+
+async function getProduct(slug: string): Promise<Product | null> {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/all-products/${slug}`,
+      {
+        cache: "no-store",
+      }
+    );
+
+    if (!res.ok) {
+      return null;
+    }
+
+    const data = await res.json();
+
+    if (!data.success) {
+      return null;
+    }
+
+    return data.product;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
+export default async function ProductPage({
+  params,
+}: Props) {
   const { slug } = await params;
 
-  const product = products.find((p) => p.slug === slug);
+  const product = await getProduct(slug);
 
   if (!product) {
     notFound();
@@ -66,27 +107,27 @@ export default async function ProductPage({ params }: Props) {
 
       </div>
 
-      {/* Navigation Buttons */}
+      {/* Navigation */}
 
       <div className="flex gap-4 mb-10">
 
         <Link
           href="/"
-          className="bg-gray-200 hover:bg-gray-300 px-6 py-3 rounded-xl font-semibold transition"
+          className="bg-gray-200 hover:bg-gray-300 px-6 py-3 rounded-xl font-semibold"
         >
           🏠 Home
         </Link>
 
         <Link
           href="/products"
-          className="bg-green-700 hover:bg-green-800 text-white px-6 py-3 rounded-xl font-semibold transition"
+          className="bg-green-700 hover:bg-green-800 text-white px-6 py-3 rounded-xl font-semibold"
         >
           📦 All Products
         </Link>
 
       </div>
 
-      {/* Product Section */}
+      {/* Product */}
 
       <div className="grid md:grid-cols-2 gap-12">
 
@@ -119,7 +160,9 @@ export default async function ProductPage({ params }: Props) {
             </span>
 
             <span className="text-green-700 font-semibold">
-              {product.stock}
+              {product.stock > 0
+                ? `${product.stock} In Stock`
+                : "Out of Stock"}
             </span>
 
           </div>
@@ -144,7 +187,6 @@ export default async function ProductPage({ params }: Props) {
         </div>
 
       </div>
-
       {/* Reviews */}
 
       <section className="mt-24">
@@ -218,7 +260,7 @@ export default async function ProductPage({ params }: Props) {
 
       {/* Related Products */}
 
-      <RelatedProducts currentSlug={slug} />
+      <RelatedProducts currentSlug={product.slug} />
 
     </div>
   );
