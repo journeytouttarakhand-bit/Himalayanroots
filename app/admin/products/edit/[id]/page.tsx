@@ -1,30 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import ImageUploader from "../../../../components/admin/ImageUploader";
-
-type Props = {
-  params: Promise<{
-    id: string;
-  }>;
-};
+import { useRouter, useParams } from "next/navigation";
+import ImageUploader from "@/app/components/admin/ImageUploader";
 
 type Category = {
   _id: string;
   name: string;
 };
 
-export default function EditProduct({
-  params,
-}: Props) {
+export default function EditProductPage() {
   const router = useRouter();
+  const params = useParams();
 
-  const [id, setId] = useState("");
+  const id = params.id as string;
 
-  const [loading, setLoading] = useState(true);
-
-  const [saving, setSaving] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
 
   const [categories, setCategories] = useState<Category[]>([]);
 
@@ -34,17 +26,27 @@ export default function EditProduct({
     category: "",
     description: "",
     price: "",
+    salePrice: "",
     stock: "",
+    sku: "",
+    weight: "",
+    tags: "",
     image: "",
     rating: "5",
     featured: false,
+    bestSeller: false,
+    newArrival: false,
     active: true,
   });
+
+  useEffect(() => {
+    fetchCategories();
+    fetchProduct();
+  }, []);
 
   async function fetchCategories() {
     try {
       const res = await fetch("/api/categories");
-
       const data = await res.json();
 
       if (data.success) {
@@ -59,53 +61,54 @@ export default function EditProduct({
     }
   }
 
-  useEffect(() => {
-    async function loadProduct() {
-      const { id } = await params;
+  async function fetchProduct() {
+    try {
+      const res = await fetch(
+        `/api/products/${id}`
+      );
 
-      setId(id);
+      const data = await res.json();
 
-      try {
-        const res = await fetch(`/api/products/${id}`);
-
-        const data = await res.json();
-
-        if (!data.success) {
-          alert("Product not found");
-
-          router.push("/admin/products");
-
-          return;
-        }
-
-        const product = data.product;
-
-        setForm({
-          name: product.name,
-          slug: product.slug,
-          category: product.category,
-          description: product.description,
-          price: product.price.toString(),
-          stock: product.stock.toString(),
-          image: product.image,
-          rating: product.rating.toString(),
-          featured: product.featured,
-          active: product.active,
-        });
-      } catch (error) {
-        console.error(error);
-
-        alert("Failed to load product");
-      } finally {
-        setLoading(false);
+      if (!data.success) {
+        alert("Product not found.");
+        router.push("/admin/products");
+        return;
       }
+
+      const product = data.product;
+
+      setForm({
+        name: product.name || "",
+        slug: product.slug || "",
+        category: product.category || "",
+        description: product.description || "",
+        price: String(product.price || ""),
+        salePrice: String(
+          product.salePrice || ""
+        ),
+        stock: String(product.stock || ""),
+        sku: product.sku || "",
+        weight: String(product.weight || ""),
+        tags: Array.isArray(product.tags)
+          ? product.tags.join(", ")
+          : "",
+        image: product.image || "",
+        rating: String(product.rating || 5),
+        featured: product.featured || false,
+        bestSeller:
+          product.bestSeller || false,
+        newArrival:
+          product.newArrival || false,
+        active:
+          product.active !== false,
+      });
+    } catch (error) {
+      console.error(error);
+      alert("Failed to load product.");
+    } finally {
+      setPageLoading(false);
     }
-
-    fetchCategories();
-
-    loadProduct();
-
-  }, [params, router]);
+  }
 
   function handleChange(
     e: React.ChangeEvent<
@@ -114,10 +117,13 @@ export default function EditProduct({
       HTMLSelectElement
     >
   ) {
-    const { name, value, type } = e.target;
+    const { name, value, type } =
+      e.target;
 
     if (type === "checkbox") {
-      const checked = (e.target as HTMLInputElement).checked;
+      const checked = (
+        e.target as HTMLInputElement
+      ).checked;
 
       setForm((prev) => ({
         ...prev,
@@ -132,70 +138,97 @@ export default function EditProduct({
       [name]: value,
     }));
   }
-
-  async function handleSubmit(
+    async function handleSubmit(
     e: React.FormEvent
   ) {
     e.preventDefault();
 
-    setSaving(true);
+    if (!form.image) {
+      alert("Please upload product image.");
+      return;
+    }
+
+    setLoading(true);
 
     try {
-      const res = await fetch(`/api/products/${id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          ...form,
-          price: Number(form.price),
-          stock: Number(form.stock),
-          rating: Number(form.rating),
-        }),
-      });
+      const res = await fetch(
+        `/api/products/${id}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type":
+              "application/json",
+          },
+          body: JSON.stringify({
+            ...form,
+            price: Number(form.price),
+            salePrice: Number(
+              form.salePrice || 0
+            ),
+            stock: Number(form.stock),
+            weight: Number(
+              form.weight || 0
+            ),
+            rating: Number(form.rating),
+            tags: form.tags
+              .split(",")
+              .map((tag) => tag.trim())
+              .filter(Boolean),
+          }),
+        }
+      );
 
       const data = await res.json();
 
       if (!data.success) {
-        alert(data.message || "Failed to update product");
+        alert(
+          data.message ||
+            "Failed to update product."
+        );
 
-        setSaving(false);
-
+        setLoading(false);
         return;
       }
 
-      alert("✅ Product Updated Successfully");
+      alert(
+        "✅ Product Updated Successfully"
+      );
 
       router.push("/admin/products");
+
     } catch (error) {
+
       console.error(error);
 
       alert("Something went wrong.");
+
     }
 
-    setSaving(false);
+    setLoading(false);
   }
 
-  if (loading) {
+  if (pageLoading) {
     return (
-      <div className="max-w-5xl mx-auto py-10 px-6">
-        <h2 className="text-2xl font-bold">
+      <div className="flex h-[60vh] items-center justify-center">
+
+        <div className="text-xl font-semibold">
           Loading Product...
-        </h2>
+        </div>
+
       </div>
     );
   }
 
   return (
-    <div className="max-w-5xl mx-auto py-10 px-6">
+    <div className="mx-auto max-w-5xl px-6 py-10">
 
-      <h1 className="text-4xl font-bold text-green-900 mb-8">
+      <h1 className="mb-8 text-4xl font-bold text-green-900">
         Edit Product
       </h1>
 
       <form
         onSubmit={handleSubmit}
-        className="bg-white shadow-lg rounded-xl p-8 space-y-6"
+        className="space-y-6 rounded-xl bg-white p-8 shadow-lg"
       >
 
         <input
@@ -204,7 +237,7 @@ export default function EditProduct({
           placeholder="Product Name"
           value={form.name}
           onChange={handleChange}
-          className="w-full border rounded-lg p-3"
+          className="w-full rounded-lg border p-3"
           required
         />
 
@@ -214,13 +247,13 @@ export default function EditProduct({
           placeholder="Slug"
           value={form.slug}
           onChange={handleChange}
-          className="w-full border rounded-lg p-3"
+          className="w-full rounded-lg border p-3"
           required
         />
 
         <div>
 
-          <label className="block mb-2 font-semibold">
+          <label className="mb-2 block font-semibold">
             Category
           </label>
 
@@ -228,7 +261,7 @@ export default function EditProduct({
             name="category"
             value={form.category}
             onChange={handleChange}
-            className="w-full border rounded-lg p-3"
+            className="w-full rounded-lg border p-3"
             required
           >
 
@@ -253,13 +286,15 @@ export default function EditProduct({
 
         <textarea
           name="description"
+          rows={5}
+          placeholder="Description"
           value={form.description}
           onChange={handleChange}
-          rows={5}
-          className="w-full border rounded-lg p-3"
+          className="w-full resize-none rounded-lg border p-3"
           required
         />
-                <div className="grid md:grid-cols-2 gap-5">
+
+        <div className="grid gap-5 md:grid-cols-2">
 
           <input
             type="number"
@@ -267,9 +302,22 @@ export default function EditProduct({
             placeholder="Price"
             value={form.price}
             onChange={handleChange}
-            className="w-full border rounded-lg p-3"
+            className="rounded-lg border p-3"
             required
           />
+
+          <input
+            type="number"
+            name="salePrice"
+            placeholder="Sale Price"
+            value={form.salePrice}
+            onChange={handleChange}
+            className="rounded-lg border p-3"
+          />
+
+        </div>
+
+        <div className="grid gap-5 md:grid-cols-2">
 
           <input
             type="number"
@@ -277,27 +325,57 @@ export default function EditProduct({
             placeholder="Stock"
             value={form.stock}
             onChange={handleChange}
-            className="w-full border rounded-lg p-3"
+            className="rounded-lg border p-3"
             required
+          />
+
+          <input
+            type="text"
+            name="sku"
+            placeholder="SKU"
+            value={form.sku}
+            onChange={handleChange}
+            className="rounded-lg border p-3"
+          />
+
+        </div>
+                <div className="grid gap-5 md:grid-cols-2">
+
+          <input
+            type="number"
+            name="weight"
+            placeholder="Weight (grams)"
+            value={form.weight}
+            onChange={handleChange}
+            className="rounded-lg border p-3"
+          />
+
+          <input
+            type="number"
+            name="rating"
+            placeholder="Rating"
+            min="1"
+            max="5"
+            step="0.1"
+            value={form.rating}
+            onChange={handleChange}
+            className="rounded-lg border p-3"
           />
 
         </div>
 
         <input
-          type="number"
-          name="rating"
-          placeholder="Rating"
-          value={form.rating}
+          type="text"
+          name="tags"
+          placeholder="Tags (comma separated)"
+          value={form.tags}
           onChange={handleChange}
-          className="w-full border rounded-lg p-3"
-          min="1"
-          max="5"
-          step="0.1"
+          className="w-full rounded-lg border p-3"
         />
 
         <div className="space-y-3">
 
-          <label className="font-semibold text-gray-700">
+          <label className="font-semibold">
             Product Image
           </label>
 
@@ -315,31 +393,32 @@ export default function EditProduct({
 
         {form.image && (
 
-          <div className="space-y-3">
+          <div>
 
-            <h3 className="font-semibold text-lg">
-              Current Image
+            <h3 className="mb-3 text-lg font-semibold">
+              Preview
             </h3>
 
             <img
               src={form.image}
               alt={form.name}
-              className="w-56 h-56 object-cover rounded-xl border"
+              className="h-60 w-60 rounded-xl border object-cover"
             />
 
           </div>
 
         )}
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid gap-6 md:grid-cols-2">
 
-          <label className="flex items-center gap-3 border rounded-lg p-4 cursor-pointer">
+          <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-4">
 
             <input
               type="checkbox"
               name="featured"
               checked={form.featured}
               onChange={handleChange}
+              className="h-5 w-5"
             />
 
             <div>
@@ -356,13 +435,14 @@ export default function EditProduct({
 
           </label>
 
-          <label className="flex items-center gap-3 border rounded-lg p-4 cursor-pointer">
+          <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-4">
 
             <input
               type="checkbox"
               name="active"
               checked={form.active}
               onChange={handleChange}
+              className="h-5 w-5"
             />
 
             <div>
@@ -380,14 +460,15 @@ export default function EditProduct({
           </label>
 
         </div>
-                <div className="border-t pt-6">
+
+        <div className="border-t pt-6">
 
           <button
             type="submit"
-            disabled={saving}
-            className="w-full bg-green-700 hover:bg-green-800 disabled:bg-gray-400 text-white py-3 rounded-lg font-bold transition"
+            disabled={loading}
+            className="w-full rounded-lg bg-green-700 py-3 font-bold text-white transition hover:bg-green-800 disabled:bg-gray-400"
           >
-            {saving
+            {loading
               ? "Updating Product..."
               : "Update Product"}
           </button>

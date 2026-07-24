@@ -1,17 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
+import mongoose from "mongoose";
+
 import connectDB from "@/lib/mongodb";
 import Product from "@/database/Product";
 
 // ===============================
-// GET - All Active Products
+// GET - All Products
 // ===============================
 export async function GET() {
   try {
     await connectDB();
 
-    const products = await Product.find({
-      active: true,
-    })
+    console.log(
+      "Connected Database:",
+      mongoose.connection.name
+    );
+
+    const products = await Product.find()
       .sort({ createdAt: -1 })
       .lean();
 
@@ -19,15 +24,17 @@ export async function GET() {
       success: true,
       products,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("GET Products Error:", error);
 
     return NextResponse.json(
       {
         success: false,
-        message: "Failed to fetch products",
+        message: error.message,
       },
-      { status: 500 }
+      {
+        status: 500,
+      }
     );
   }
 }
@@ -38,6 +45,11 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     await connectDB();
+
+    console.log(
+      "Connected Database:",
+      mongoose.connection.name
+    );
 
     const body = await req.json();
 
@@ -52,26 +64,47 @@ export async function POST(req: NextRequest) {
           success: false,
           message: "Slug already exists",
         },
-        { status: 400 }
+        {
+          status: 400,
+        }
       );
     }
 
-    const product = await Product.create(body);
+    const product = await Product.create({
+      name: body.name,
+      slug: body.slug,
+      description: body.description,
+      price: Number(body.price),
+      category: body.category,
+      image: body.image,
+      stock: Number(body.stock),
+
+      rating: Number(body.rating ?? 5),
+
+      featured: body.featured ?? false,
+
+      active: body.active ?? true,
+
+      inStock: Number(body.stock) > 0,
+    });
 
     return NextResponse.json({
       success: true,
       message: "Product Added Successfully",
       product,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error("POST Product Error:", error);
 
     return NextResponse.json(
       {
         success: false,
-        message: "Failed to add product",
+        message: error.message,
+        errors: error.errors,
       },
-      { status: 500 }
+      {
+        status: 500,
+      }
     );
   }
 }

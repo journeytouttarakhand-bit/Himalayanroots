@@ -19,13 +19,16 @@ type Product = {
   description: string;
   price: number;
   stock: number;
+  inStock: boolean;
   image: string;
   rating: number;
   featured: boolean;
   active: boolean;
 };
 
-async function getProduct(slug: string): Promise<Product | null> {
+async function getProduct(
+  slug: string
+): Promise<Product | null> {
   try {
     const res = await fetch(
       `${process.env.NEXT_PUBLIC_BASE_URL}/api/all-products/${slug}`,
@@ -79,8 +82,6 @@ export default async function ProductPage({
   return (
     <div className="max-w-7xl mx-auto px-6 py-16">
 
-      {/* Breadcrumb */}
-
       <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 mb-8">
 
         <Link
@@ -107,8 +108,6 @@ export default async function ProductPage({
 
       </div>
 
-      {/* Navigation */}
-
       <div className="flex gap-4 mb-10">
 
         <Link
@@ -126,8 +125,6 @@ export default async function ProductPage({
         </Link>
 
       </div>
-
-      {/* Product */}
 
       <div className="grid md:grid-cols-2 gap-12">
 
@@ -152,18 +149,25 @@ export default async function ProductPage({
           <p className="text-gray-500 mt-3">
             {product.category}
           </p>
-
           <div className="flex items-center gap-6 mt-5">
 
             <span className="text-yellow-500 text-xl">
               ⭐ {product.rating}
             </span>
 
-            <span className="text-green-700 font-semibold">
-              {product.stock > 0
-                ? `${product.stock} In Stock`
-                : "Out of Stock"}
-            </span>
+            {product.inStock ? (
+
+              <span className="bg-green-100 text-green-700 px-4 py-2 rounded-full font-semibold">
+                ✅ {product.stock} In Stock
+              </span>
+
+            ) : (
+
+              <span className="bg-red-100 text-red-700 px-4 py-2 rounded-full font-semibold">
+                ❌ Out of Stock
+              </span>
+
+            )}
 
           </div>
 
@@ -175,18 +179,32 @@ export default async function ProductPage({
             {product.description}
           </p>
 
-          <a
-            href="https://wa.me/917895943324"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block mt-10 bg-green-700 hover:bg-green-800 text-white px-8 py-4 rounded-xl font-semibold transition"
-          >
-            Order on WhatsApp
-          </a>
+          {product.inStock ? (
+
+            <a
+              href="https://wa.me/917895943324"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block mt-10 bg-green-700 hover:bg-green-800 text-white px-8 py-4 rounded-xl font-semibold transition"
+            >
+              Order on WhatsApp
+            </a>
+
+          ) : (
+
+            <button
+              disabled
+              className="inline-block mt-10 bg-gray-400 cursor-not-allowed text-white px-8 py-4 rounded-xl font-semibold"
+            >
+              Out of Stock
+            </button>
+
+          )}
 
         </div>
 
       </div>
+
       {/* Reviews */}
 
       <section className="mt-24">
@@ -206,7 +224,6 @@ export default async function ProductPage({
           </span>
 
         </div>
-
         {productReviews.length === 0 ? (
 
           <div className="bg-gray-100 rounded-xl p-8 text-center">
@@ -260,7 +277,9 @@ export default async function ProductPage({
 
       {/* Related Products */}
 
-      <RelatedProducts currentSlug={product.slug} />
+      <RelatedProducts
+        currentSlug={product.slug}
+      />
 
     </div>
   );

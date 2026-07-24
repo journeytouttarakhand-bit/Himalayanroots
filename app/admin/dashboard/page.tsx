@@ -1,447 +1,189 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 
-type Order = {
-  _id: string;
-  customer: {
-    name: string;
-    phone: string;
-    address: string;
-    city: string;
-    state: string;
-    pincode: string;
+import DashboardHeader from "@/app/components/admin/DashboardHeader";
+import DashboardStats from "@/app/components/admin/DashboardStats";
+import SalesChart from "@/app/components/admin/SalesChart";
+import RecentOrders from "@/app/components/admin/RecentOrders";
+import TopProducts from "@/app/components/admin/TopProducts";
+import LowStockProducts from "@/app/components/admin/LowStockProducts";
+import QuickActions from "@/app/components/admin/QuickActions";
+
+type DashboardData = {
+  success: boolean;
+
+  overview: {
+    totalRevenue: number;
+    totalOrders: number;
+    totalProducts: number;
+    totalCategories: number;
+    totalCustomers: number;
+
+    pendingOrders: number;
+    deliveredOrders: number;
+    cancelledOrders: number;
   };
-  totalAmount: number;
-  paymentStatus: string;
-  orderStatus: string;
-  createdAt: string;
+
+  monthlySales: {
+    month: number;
+    revenue: number;
+    orders: number;
+  }[];
+
+  recentOrders: any[];
+
+  lowStockProducts: any[];
+
+  outOfStockProducts: any[];
 };
 
-type DashboardStats = {
-  totalProducts: number;
-  activeProducts: number;
-  inactiveProducts: number;
-  featuredProducts: number;
-  outOfStockProducts: number;
-  totalStock: number;
-};
+export default function DashboardPage() {
+  const [data, setData] =
+    useState<DashboardData | null>(null);
 
-type RecentProduct = {
-  _id: string;
-  name: string;
-  category: string;
-  price: number;
-  stock: number;
-  image: string;
-};
+  const [loading, setLoading] =
+    useState(true);
 
-export default function Dashboard() {
-  const router = useRouter();
-
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
-
-  const [stats, setStats] = useState<DashboardStats>({
-    totalProducts: 0,
-    activeProducts: 0,
-    inactiveProducts: 0,
-    featuredProducts: 0,
-    outOfStockProducts: 0,
-    totalStock: 0,
-  });
-
-  const [recentProducts, setRecentProducts] =
-    useState<RecentProduct[]>([]);
-
-  useEffect(() => {
-    const loggedIn =
-      localStorage.getItem("adminLoggedIn");
-
-    if (!loggedIn) {
-      router.push("/admin/login");
-      return;
-    }
-
-    fetchOrders();
-    fetchDashboard();
-  }, [router]);
-
-  async function fetchDashboard() {
+  async function loadDashboard() {
     try {
       const res = await fetch(
-        "/api/admin/dashboard"
+        "/api/admin/dashboard",
+        {
+          cache: "no-store",
+        }
       );
 
-      const data = await res.json();
+      const json = await res.json();
 
-      if (data.success) {
-        setStats(data.stats);
-        setRecentProducts(
-          data.recentProducts
-        );
-      }
+      setData(json);
+
     } catch (error) {
+
       console.error(error);
-    }
-  }
 
-  async function fetchOrders() {
-    try {
-      const res = await fetch("/api/orders");
-
-      const data = await res.json();
-
-      if (data.success) {
-        setOrders(data.orders);
-      }
-    } catch (error) {
-      console.error(error);
     } finally {
+
       setLoading(false);
+
     }
   }
-  async function updateStatus(
-    id: string,
-    orderStatus: string
-  ) {
+
+  useEffect(() => {
+    loadDashboard();
+  }, []);
+
+  async function handleRefresh() {
+    setLoading(true);
+
+    await loadDashboard();
+  }
+
+  async function handleLogout() {
     try {
-      const res = await fetch(`/api/orders/${id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          orderStatus,
-        }),
+      await fetch("/api/admin/logout", {
+        method: "POST",
       });
 
-      const data = await res.json();
+      window.location.href =
+        "/admin/login";
 
-      if (data.success) {
-        fetchOrders();
-        alert("Order Status Updated Successfully");
-      } else {
-        alert(data.message);
-      }
     } catch (error) {
-      console.error(error);
-      alert("Failed to update status");
-    }
-  }
 
-  function logout() {
-    localStorage.removeItem("adminLoggedIn");
-    router.push("/admin/login");
+      console.error(error);
+
+      alert("Logout Failed");
+
+    }
   }
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen text-2xl font-bold">
-        Loading...
+      <div className="p-8">
+
+        <div className="animate-pulse space-y-6">
+
+          <div className="h-10 w-72 rounded bg-gray-200" />
+
+          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+
+            {Array.from({ length: 8 }).map(
+              (_, index) => (
+                <div
+                  key={index}
+                  className="h-36 rounded-2xl bg-gray-200"
+                />
+              )
+            )}
+
+          </div>
+
+          <div className="h-[420px] rounded-2xl bg-gray-200" />
+
+        </div>
+
+      </div>
+    );
+  }
+
+  if (!data?.success) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+
+        <div className="rounded-xl border border-red-200 bg-red-50 p-8 text-center">
+
+          <h2 className="text-xl font-bold text-red-700">
+            Dashboard Load Failed
+          </h2>
+
+          <p className="mt-2 text-gray-600">
+            Unable to fetch dashboard data.
+          </p>
+
+        </div>
+
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-10">
+    <div className="space-y-8 p-6 lg:p-8">
 
-      <div className="flex justify-between items-center mb-10">
+      <DashboardHeader
+        onRefresh={handleRefresh}
+        onLogout={handleLogout}
+      />
 
-        <h1 className="text-4xl font-bold text-green-900">
-          Himalayan Roots Admin
-        </h1>
+      <DashboardStats
+        overview={data.overview}
+      />
 
-        <button
-          onClick={logout}
-          className="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg"
-        >
-          Logout
-        </button>
+      <div className="grid grid-cols-1 gap-8">
 
-      </div>
-
-      {/* Dashboard Statistics */}
-
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-5 mb-10">
-
-        <div className="bg-white rounded-xl shadow p-5 border">
-          <p className="text-gray-500 text-sm">
-            Total Products
-          </p>
-          <h2 className="text-3xl font-bold text-green-700 mt-2">
-            {stats.totalProducts}
-          </h2>
-        </div>
-
-        <div className="bg-white rounded-xl shadow p-5 border">
-          <p className="text-gray-500 text-sm">
-            Active
-          </p>
-          <h2 className="text-3xl font-bold text-blue-600 mt-2">
-            {stats.activeProducts}
-          </h2>
-        </div>
-
-        <div className="bg-white rounded-xl shadow p-5 border">
-          <p className="text-gray-500 text-sm">
-            Featured
-          </p>
-          <h2 className="text-3xl font-bold text-yellow-600 mt-2">
-            {stats.featuredProducts}
-          </h2>
-        </div>
-
-        <div className="bg-white rounded-xl shadow p-5 border">
-          <p className="text-gray-500 text-sm">
-            Out Of Stock
-          </p>
-          <h2 className="text-3xl font-bold text-red-600 mt-2">
-            {stats.outOfStockProducts}
-          </h2>
-        </div>
-
-        <div className="bg-white rounded-xl shadow p-5 border">
-          <p className="text-gray-500 text-sm">
-            Total Stock
-          </p>
-          <h2 className="text-3xl font-bold text-purple-600 mt-2">
-            {stats.totalStock}
-          </h2>
-        </div>
-
-        <div className="bg-green-700 text-white rounded-xl shadow p-5">
-          <p className="text-sm">
-            Total Orders
-          </p>
-          <h2 className="text-3xl font-bold mt-2">
-            {orders.length}
-          </h2>
-        </div>
-
-      </div>
-      {/* Recent Products */}
-
-      <div className="bg-white rounded-xl shadow-lg border p-6 mb-10">
-
-        <h2 className="text-2xl font-bold text-green-900 mb-6">
-          Recent Products
-        </h2>
-
-        {recentProducts.length === 0 ? (
-
-          <p className="text-gray-500">
-            No Products Found
-          </p>
-
-        ) : (
-
-          <div className="overflow-x-auto">
-
-            <table className="w-full">
-
-              <thead>
-
-                <tr className="border-b">
-
-                  <th className="text-left py-3">
-                    Image
-                  </th>
-
-                  <th className="text-left py-3">
-                    Name
-                  </th>
-
-                  <th className="text-left py-3">
-                    Category
-                  </th>
-
-                  <th className="text-left py-3">
-                    Price
-                  </th>
-
-                  <th className="text-left py-3">
-                    Stock
-                  </th>
-
-                </tr>
-
-              </thead>
-
-              <tbody>
-
-                {recentProducts.map((product) => (
-
-                  <tr
-                    key={product._id}
-                    className="border-b hover:bg-gray-50"
-                  >
-
-                    <td className="py-3">
-
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                        className="w-16 h-16 rounded-lg object-cover border"
-                      />
-
-                    </td>
-
-                    <td className="font-semibold">
-                      {product.name}
-                    </td>
-
-                    <td>
-                      {product.category}
-                    </td>
-
-                    <td>
-                      ₹{product.price}
-                    </td>
-
-                    <td>
-
-                      <span
-                        className={`font-semibold ${
-                          product.stock === 0
-                            ? "text-red-600"
-                            : "text-green-700"
-                        }`}
-                      >
-                        {product.stock}
-                      </span>
-
-                    </td>
-
-                  </tr>
-
-                ))}
-
-              </tbody>
-
-            </table>
-
-          </div>
-
-        )}
+        <SalesChart
+          data={data.monthlySales}
+        />
 
       </div>
 
-      {/* Orders */}
-      <div className="bg-green-700 text-white rounded-xl p-6 mb-8">
+      <div className="grid grid-cols-1 gap-8 xl:grid-cols-2">
 
-        <h2 className="text-2xl font-bold">
-          Total Orders : {orders.length}
-        </h2>
+        <RecentOrders
+          orders={data.recentOrders}
+        />
+
+        <QuickActions />
 
       </div>
 
-      {orders.length === 0 ? (
+      <LowStockProducts
+        lowStockProducts={data.lowStockProducts}
+        outOfStockProducts={data.outOfStockProducts}
+      />
 
-        <div className="text-center text-xl">
-          No Orders Found
-        </div>
-
-      ) : (
-
-        <div className="space-y-6">
-
-          {orders.map((order) => (
-
-            <div
-              key={order._id}
-              className="bg-white rounded-xl shadow-lg border p-6"
-            >
-
-              <div className="grid md:grid-cols-2 gap-6">
-
-                <div>
-
-                  <h2 className="text-2xl font-bold text-green-900">
-                    {order.customer.name}
-                  </h2>
-
-                  <p>{order.customer.phone}</p>
-
-                  <p>{order.customer.address}</p>
-
-                  <p>
-                    {order.customer.city}, {order.customer.state}
-                  </p>
-
-                  <p>{order.customer.pincode}</p>
-
-                </div>
-
-                <div className="text-right">
-
-                  <h2 className="text-3xl font-bold text-green-700">
-                    ₹{order.totalAmount}
-                  </h2>
-
-                  <p className="mt-3">
-                    Payment :
-                    <span className="font-bold text-green-700 ml-2">
-                      {order.paymentStatus}
-                    </span>
-                  </p>
-
-                  <div className="mt-4">
-
-                    <label className="font-semibold mr-3">
-                      Order Status:
-                    </label>
-
-                    <select
-                      value={order.orderStatus}
-                      onChange={(e) =>
-                        updateStatus(
-                          order._id,
-                          e.target.value
-                        )
-                      }
-                      className="border rounded-lg px-3 py-2"
-                    >
-                      <option value="Pending">
-                        Pending
-                      </option>
-
-                      <option value="Processing">
-                        Processing
-                      </option>
-
-                      <option value="Shipped">
-                        Shipped
-                      </option>
-
-                      <option value="Delivered">
-                        Delivered
-                      </option>
-
-                      <option value="Cancelled">
-                        Cancelled
-                      </option>
-
-                    </select>
-
-                  </div>
-
-                  <p className="text-gray-500 mt-4">
-                    {new Date(order.createdAt).toLocaleString()}
-                  </p>
-
-                </div>
-
-              </div>
-
-            </div>
-
-          ))}
-
-        </div>
-
-      )}
+      <TopProducts
+        products={data.lowStockProducts}
+      />
 
     </div>
   );

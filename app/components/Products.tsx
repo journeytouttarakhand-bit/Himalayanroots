@@ -20,6 +20,7 @@ type Product = {
   description: string;
   price: number;
   stock: number;
+  inStock: boolean;
   image: string;
   rating: number;
   featured: boolean;
@@ -219,18 +220,34 @@ export default function Products() {
 
                 <Link href={`/products/${product.slug}`}>
 
-                  <div className="relative h-72">
+  <div className="relative h-72">
 
-                    <Image
-                      src={product.image}
-                      alt={product.name}
-                      fill
-                      className="object-cover"
-                    />
+    <Image
+      src={product.image}
+      alt={product.name}
+      fill
+      className={`object-cover transition ${
+        !product.inStock ? "opacity-50 grayscale" : ""
+      }`}
+    />
 
-                  </div>
+    {product.featured && (
+      <span className="absolute top-4 left-4 bg-yellow-500 text-white text-xs font-bold px-3 py-1 rounded-full">
+        ⭐ Featured
+      </span>
+    )}
 
-                </Link>
+    {!product.inStock && (
+      <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+        <span className="bg-red-600 text-white px-5 py-2 rounded-full font-bold text-lg">
+          Out of Stock
+        </span>
+      </div>
+    )}
+
+  </div>
+
+</Link>
 
                 <div className="p-6">
 
@@ -246,19 +263,27 @@ export default function Products() {
                     ₹{product.price}
                   </p>
 
-                  <div className="flex justify-between mt-3">
+                  <div className="flex justify-between items-center mt-3">
 
-                    <span className="text-yellow-500">
-                      ⭐ {product.rating}
-                    </span>
+  <span className="text-yellow-500 font-semibold">
+    ⭐ {product.rating}
+  </span>
 
-                    <span className="text-green-700">
-                      {product.stock > 0
-                        ? "In Stock"
-                        : "Out of Stock"}
-                    </span>
+  {product.inStock ? (
 
-                  </div>
+    <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-semibold">
+      {product.stock} Available
+    </span>
+
+  ) : (
+
+    <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-semibold">
+      Out of Stock
+    </span>
+
+  )}
+
+</div>
 
                   <div className="mt-6 flex gap-3">
                     <Link
@@ -269,18 +294,18 @@ export default function Products() {
                     </Link>
 
                     <button
-                      onClick={() => handleAddToCart(product)}
-                      disabled={product.stock <= 0}
-                      className={`flex-1 py-3 rounded-xl font-semibold text-white transition ${
-                        product.stock > 0
-                          ? "bg-green-700 hover:bg-green-800"
-                          : "bg-gray-400 cursor-not-allowed"
-                      }`}
-                    >
-                      {product.stock > 0
-                        ? "Add to Cart"
-                        : "Out of Stock"}
-                    </button>
+  onClick={() => handleAddToCart(product)}
+  disabled={!product.inStock}
+  className={`flex-1 py-3 rounded-xl font-semibold text-white transition ${
+    product.inStock
+      ? "bg-green-700 hover:bg-green-800"
+      : "bg-gray-400 cursor-not-allowed"
+  }`}
+>
+  {product.inStock
+    ? "Add to Cart"
+    : "Out of Stock"}
+</button>
 
                   </div>
 

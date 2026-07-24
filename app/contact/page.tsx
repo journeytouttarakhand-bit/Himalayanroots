@@ -13,8 +13,8 @@ export default function ContactPage() {
 
         <div className="bg-white rounded-2xl shadow-md p-8">
           <p><strong>Email:</strong> support@himalayanroots.in</p>
-          <p><strong>Phone:</strong> +91 XXXXXXXXXX</p>
-          <p><strong>Address:</strong> Uttarakhand, India</p>
+          <p><strong>Phone:</strong> +91 7895943324</p>
+          <p><strong>Address:</strong> Mussoorie, Uttarakhand, India</p>
         </div>
       </div>
     </main>
