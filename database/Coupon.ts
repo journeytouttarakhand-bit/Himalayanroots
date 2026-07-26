@@ -107,10 +107,10 @@ const CouponSchema = new Schema(
   }
 );
 
-CouponSchema.pre("save", function (next) {
-  this.code = this.code.toUpperCase();
-
-  next();
+CouponSchema.pre("save", function () {
+  if (this.code) {
+    this.code = this.code.toUpperCase();
+  }
 });
 export interface ICoupon
   extends mongoose.Document {

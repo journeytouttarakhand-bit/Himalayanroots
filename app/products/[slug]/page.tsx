@@ -2,7 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { reviews } from "@/data/reviews";
+import ReviewForm from "@/app/components/ReviewForm";
+import ReviewList from "@/app/components/ReviewList";
 import RelatedProducts from "@/app/components/RelatedProducts";
 
 type Props = {
@@ -65,20 +66,7 @@ export default async function ProductPage({
     notFound();
   }
 
-  const productReviews = reviews.filter(
-    (review) => review.productSlug === slug
-  );
-
-  const averageRating =
-    productReviews.length > 0
-      ? (
-          productReviews.reduce(
-            (sum, review) => sum + review.rating,
-            0
-          ) / productReviews.length
-        ).toFixed(1)
-      : "0";
-
+  
   return (
     <div className="max-w-7xl mx-auto px-6 py-16">
 
@@ -205,76 +193,19 @@ export default async function ProductPage({
 
       </div>
 
-      {/* Reviews */}
+{/* Reviews */}
 
-      <section className="mt-24">
+<div className="mt-24">
 
-        <h2 className="text-4xl font-bold text-green-900 mb-4">
-          Customer Reviews
-        </h2>
+  <ReviewForm
+    productId={product._id}
+  />
 
-        <div className="flex items-center gap-3 mb-10">
+  <ReviewList
+    productId={product._id}
+  />
 
-          <span className="text-2xl text-yellow-500">
-            ⭐ {averageRating}
-          </span>
-
-          <span className="text-gray-600">
-            ({productReviews.length} Reviews)
-          </span>
-
-        </div>
-        {productReviews.length === 0 ? (
-
-          <div className="bg-gray-100 rounded-xl p-8 text-center">
-
-            <p className="text-gray-600">
-              No reviews available.
-            </p>
-
-          </div>
-
-        ) : (
-
-          <div className="space-y-6">
-
-            {productReviews.map((review) => (
-
-              <div
-                key={review.id}
-                className="bg-white rounded-2xl shadow-md border p-6"
-              >
-
-                <div className="flex justify-between items-center">
-
-                  <h3 className="font-bold text-xl">
-                    {review.name}
-                  </h3>
-
-                  <span className="text-sm text-gray-500">
-                    {review.date}
-                  </span>
-
-                </div>
-
-                <div className="mt-2 text-yellow-500 text-lg">
-                  {"⭐".repeat(review.rating)}
-                </div>
-
-                <p className="mt-4 text-gray-700 leading-7">
-                  {review.comment}
-                </p>
-
-              </div>
-
-            ))}
-
-          </div>
-
-        )}
-
-      </section>
-
+</div>
       {/* Related Products */}
 
       <RelatedProducts

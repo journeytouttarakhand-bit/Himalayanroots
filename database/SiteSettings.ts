@@ -1,223 +1,111 @@
-import mongoose, {
-  Schema,
-  models,
-  model,
-} from "mongoose";
+import mongoose, { Schema, Document } from "mongoose";
 
-const SiteSettingsSchema = new Schema(
+export interface IFAQ {
+  question: string;
+  answer: string;
+}
+
+export interface ISiteSettings extends Document {
+  // General & Appearance
+  siteName?: string;
+  tagline?: string;
+  siteDescription?: string;
+  logo?: string;
+  favicon?: string;
+  primaryColor?: string;
+  secondaryColor?: string;
+
+  // Homepage Hero
+  heroTitle?: string;
+  heroSubtitle?: string;
+  heroButtonText?: string;
+  heroButtonLink?: string;
+  heroImage?: string;
+
+  // Contact
+  contactEmail?: string;
+  contactPhone?: string;
+  address?: string;
+  workingHours?: string;
+
+  // Social Links
+  facebookUrl?: string;
+  instagramUrl?: string;
+  twitterUrl?: string;
+  youtubeUrl?: string;
+  whatsappNumber?: string;
+
+  // Announcement Bar
+  announcementEnabled?: boolean;
+  announcementText?: string;
+  announcementButtonText?: string;
+  announcementLink?: string;
+  announcementBackground?: string;
+  announcementTextColor?: string;
+
+  // Footer
+  footerAboutText?: string;
+  copyrightText?: string;
+
+  // SEO
+  metaTitle?: string;
+  metaDescription?: string;
+  keywords?: string;
+
+  // FAQs
+  faqs?: IFAQ[];
+}
+
+const SiteSettingsSchema = new Schema<ISiteSettings>(
   {
-    //----------------------------------
-    // General
-    //----------------------------------
+    siteName: { type: String, default: "Himalayan Roots" },
+    tagline: { type: String, default: "Pure & Organic Products" },
+    siteDescription: { type: String, default: "" },
+    logo: { type: String, default: "/logo.png" },
+    favicon: { type: String, default: "/favicon.ico" },
+    primaryColor: { type: String, default: "#166534" },
+    secondaryColor: { type: String, default: "#65A30D" },
 
-    siteName: {
-      type: String,
-      default: "Himalayan Roots",
-    },
+    heroTitle: { type: String, default: "" },
+    heroSubtitle: { type: String, default: "" },
+    heroButtonText: { type: String, default: "" },
+    heroButtonLink: { type: String, default: "" },
+    heroImage: { type: String, default: "" },
 
-    tagline: {
-      type: String,
-      default: "Pure Taste of Uttarakhand",
-    },
+    contactEmail: { type: String, default: "" },
+    contactPhone: { type: String, default: "" },
+    address: { type: String, default: "" },
+    workingHours: { type: String, default: "" },
 
-    logo: {
-      type: String,
-      default: "",
-    },
+    facebookUrl: { type: String, default: "" },
+    instagramUrl: { type: String, default: "" },
+    twitterUrl: { type: String, default: "" },
+    youtubeUrl: { type: String, default: "" },
+    whatsappNumber: { type: String, default: "" },
 
-    favicon: {
-      type: String,
-      default: "",
-    },
+    announcementEnabled: { type: Boolean, default: true },
+    announcementText: { type: String, default: "🚚 Free Shipping on Orders Above ₹999" },
+    announcementButtonText: { type: String, default: "" },
+    announcementLink: { type: String, default: "" },
+    announcementBackground: { type: String, default: "#166534" },
+    announcementTextColor: { type: String, default: "#ffffff" },
 
-    //----------------------------------
-    // Hero Section
-    //----------------------------------
+    footerAboutText: { type: String, default: "" },
+    copyrightText: { type: String, default: "© 2026 Himalayan Roots. All rights reserved." },
 
-    heroTitle: {
-      type: String,
-      default:
-        "Authentic Himalayan Products",
-    },
+    metaTitle: { type: String, default: "" },
+    metaDescription: { type: String, default: "" },
+    keywords: { type: String, default: "" },
 
-    heroSubtitle: {
-      type: String,
-      default:
-        "Directly sourced from the farmers of Uttarakhand.",
-    },
-
-    heroButtonText: {
-      type: String,
-      default: "Shop Now",
-    },
-
-    heroButtonLink: {
-      type: String,
-      default: "/products",
-    },
-
-    heroImage: {
-      type: String,
-      default: "",
-    },
-
-    //----------------------------------
-    // Announcement Bar
-    //----------------------------------
-
-    announcementEnabled: {
-      type: Boolean,
-      default: true,
-    },
-
-    announcementText: {
-      type: String,
-      default:
-        "🚚 Free Shipping on Orders Above ₹999",
-    },
-
-    announcementBackground: {
-      type: String,
-      default: "#14532d",
-    },
-
-    announcementTextColor: {
-      type: String,
-      default: "#ffffff",
-    },
-
-    announcementLink: {
-      type: String,
-      default: "",
-    },
-
-    announcementButtonText: {
-      type: String,
-      default: "",
-    },
-
-    //----------------------------------
-    // Theme
-    //----------------------------------
-
-    primaryColor: {
-      type: String,
-      default: "#166534",
-    },
-
-    secondaryColor: {
-      type: String,
-      default: "#15803d",
-    },
-
-    fontFamily: {
-      type: String,
-      default: "Inter",
-    },
-
-    //----------------------------------
-    // Contact
-    //----------------------------------
-
-    phone: {
-      type: String,
-      default: "",
-    },
-
-    email: {
-      type: String,
-      default: "",
-    },
-        address: {
-      type: String,
-      default: "",
-    },
-
-    //----------------------------------
-    // Social Links
-    //----------------------------------
-
-    facebook: {
-      type: String,
-      default: "",
-    },
-
-    instagram: {
-      type: String,
-      default: "",
-    },
-
-    youtube: {
-      type: String,
-      default: "",
-    },
-
-    whatsapp: {
-      type: String,
-      default: "",
-    },
-
-    //----------------------------------
-    // Footer
-    //----------------------------------
-
-    footerDescription: {
-      type: String,
-      default:
-        "Bringing authentic Himalayan products directly from Uttarakhand farmers to every home in India.",
-    },
-
-    copyrightText: {
-      type: String,
-      default:
-        "© Himalayan Roots. All Rights Reserved.",
-    },
-
-    //----------------------------------
-    // SEO
-    //----------------------------------
-
-    metaTitle: {
-      type: String,
-      default: "Himalayan Roots",
-    },
-
-    metaDescription: {
-      type: String,
-      default:
-        "Buy authentic Himalayan products directly sourced from Uttarakhand farmers.",
-    },
-
-    metaKeywords: {
-      type: String,
-      default:
-        "Himalayan Roots, Uttarakhand Products, Organic, Natural, Honey, Millets",
-    },
-
-    //----------------------------------
-    // Maintenance
-    //----------------------------------
-
-    maintenanceMode: {
-      type: Boolean,
-      default: false,
-    },
-
-    maintenanceMessage: {
-      type: String,
-      default:
-        "We are currently updating our website. Please check back soon.",
-    },
+    faqs: [
+      {
+        question: { type: String, default: "" },
+        answer: { type: String, default: "" },
+      },
+    ],
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
-export default
-  models.SiteSettings ||
-  model(
-    "SiteSettings",
-    SiteSettingsSchema
-  );
-    
+export default mongoose.models.SiteSettings ||
+  mongoose.model<ISiteSettings>("SiteSettings", SiteSettingsSchema);

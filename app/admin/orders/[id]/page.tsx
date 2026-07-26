@@ -1,15 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 
+// ==========================================
+// Types
+// ==========================================
 type OrderItem = {
-  id: number;
-  slug: string;
+  id?: number | string;
+  slug?: string;
   name: string;
+  image?: string;
   price: number;
   quantity: number;
-  image: string;
 };
 
 type Customer = {
@@ -25,54 +28,55 @@ type Customer = {
 
 type Order = {
   _id: string;
-
   customer: Customer;
-
   items: OrderItem[];
-
   totalAmount: number;
-
-  paymentId: string;
-
-  orderId: string;
-
-  paymentStatus: string;
-
+  finalAmount?: number;
+  originalAmount?: number;
+  discount?: number;
+  paymentId?: string;
+  orderId?: string;
+  paymentStatus?: string;
   orderStatus: string;
-
   createdAt: string;
 };
 
 export default function OrderDetailsPage() {
   const params = useParams();
-
   const router = useRouter();
 
   const [order, setOrder] = useState<Order | null>(null);
-
   const [loading, setLoading] = useState(true);
-
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    fetchOrder();
-  }, []);
+  const orderIdParam = params?.id as string;
 
-  async function fetchOrder() {
+  const fetchOrder = useCallback(async () => {
+    if (!orderIdParam) return;
+
     try {
-      const res = await fetch(`/api/orders/${params.id}`);
-
+      setLoading(true);
+      const res = await fetch(`/api/orders/${orderIdParam}`);
       const data = await res.json();
 
       if (data.success) {
         setOrder(data.order);
+      } else {
+        setOrder(null);
       }
     } catch (error) {
-      console.error(error);
+      console.error("Error fetching order:", error);
+      setOrder(null);
     } finally {
       setLoading(false);
     }
-  }
+  }, [orderIdParam]);
+
+  useEffect(() => {
+    if (orderIdParam) {
+      fetchOrder();
+    }
+  }, [orderIdParam, fetchOrder]);
 
   async function updateStatus(status: string) {
     if (!order) return;
@@ -94,9 +98,13 @@ export default function OrderDetailsPage() {
 
       if (data.success) {
         setOrder(data.order);
+        alert("Order status updated successfully!");
+      } else {
+        alert(data.message || "Failed to update status");
       }
     } catch (error) {
-      console.error(error);
+      console.error("Error updating status:", error);
+      alert("Something went wrong while updating status.");
     } finally {
       setSaving(false);
     }
@@ -104,581 +112,221 @@ export default function OrderDetailsPage() {
 
   if (loading) {
     return (
-      <div className="flex h-[70vh] items-center justify-center text-xl font-semibold">
-        Loading Order...
+      <div className="flex h-[70vh] items-center justify-center text-xl font-semibold text-gray-600">
+        Loading Order Details...
       </div>
     );
   }
 
   if (!order) {
     return (
-      <div className="flex h-[70vh] items-center justify-center text-xl font-semibold text-red-600">
-        Order Not Found
+      <div className="flex flex-col h-[70vh] items-center justify-center gap-4">
+        <p className="text-xl font-semibold text-red-600">Order Not Found</p>
+        <button
+          onClick={() => router.back()}
+          className="rounded-lg border bg-white px-5 py-2 text-sm font-semibold hover:bg-gray-50 shadow-sm"
+        >
+          Go Back
+        </button>
       </div>
     );
   }
 
+  const subtotal = order.originalAmount || order.totalAmount || 0;
+  const finalPayable = order.finalAmount || order.totalAmount || 0;
+  const discountAmount = order.discount || (subtotal > finalPayable ? subtotal - finalPayable : 0);
+
   return (
-    <div className="mx-auto max-w-7xl space-y-8 p-8">
-
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-
+    <div className="mx-auto max-w-7xl space-y-8 p-6 md:p-8">
+      {/* Top Header Bar */}
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between border-b pb-6">
         <div>
-
-          <h1 className="text-4xl font-bold text-green-900">
+          <h1 className="text-3xl sm:text-4xl font-bold text-green-900">
             Order Details
           </h1>
-
-          <p className="mt-2 text-gray-500">
-            Order ID : {order._id}
+          <p className="mt-1 text-sm font-medium text-gray-500">
+            Order ID : <span className="font-bold text-gray-800">{order.orderId || order._id}</span>
           </p>
-
         </div>
 
         <div className="flex gap-3">
-
           <button
             onClick={() => router.back()}
-            className="rounded-lg border px-5 py-2 font-semibold hover:bg-gray-100"
+            className="rounded-xl border bg-white px-5 py-2.5 font-semibold text-gray-700 hover:bg-gray-50 shadow-sm transition"
           >
-            Back
+            ← Back
           </button>
 
           <button
             onClick={() => window.print()}
-            className="rounded-lg bg-green-700 px-5 py-2 font-semibold text-white hover:bg-green-800"
-          >
-            Print Invoice
-          </button>
-
-        </div>
-
-      </div>
-      <div className="grid gap-8 lg:grid-cols-2">
-
-        <div className="rounded-2xl border bg-white p-6 shadow-sm">
-
-          <h2 className="mb-6 text-2xl font-bold text-green-800">
-            Customer Details
-          </h2>
-
-          <div className="space-y-4">
-
-            <div>
-              <p className="text-sm text-gray-500">
-                Customer Name
-              </p>
-
-              <p className="font-semibold text-lg">
-                {order.customer.name}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-sm text-gray-500">
-                Phone Number
-              </p>
-
-              <p className="font-semibold">
-                {order.customer.phone}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-sm text-gray-500">
-                Email
-              </p>
-
-              <p className="font-semibold">
-                {order.customer.email || "-"}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-sm text-gray-500">
-                Address
-              </p>
-
-              <p className="font-semibold">
-                {order.customer.address}
-              </p>
-            </div>
-
-            <div className="grid grid-cols-3 gap-4">
-
-              <div>
-                <p className="text-sm text-gray-500">
-                  City
-                </p>
-
-                <p className="font-semibold">
-                  {order.customer.city}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-sm text-gray-500">
-                  State
-                </p>
-
-                <p className="font-semibold">
-                  {order.customer.state}
-                </p>
-              </div>
-
-              <div>
-                <p className="text-sm text-gray-500">
-                  Pincode
-                </p>
-
-                <p className="font-semibold">
-                  {order.customer.pincode}
-                </p>
-              </div>
-
-            </div>
-
-            {order.customer.notes && (
-
-              <div>
-
-                <p className="text-sm text-gray-500">
-                  Customer Notes
-                </p>
-
-                <p className="rounded-lg bg-gray-50 p-3">
-                  {order.customer.notes}
-                </p>
-
-              </div>
-
-            )}
-
-          </div>
-
-        </div>
-
-        <div className="rounded-2xl border bg-white p-6 shadow-sm">
-
-          <h2 className="mb-6 text-2xl font-bold text-green-800">
-            Order Information
-          </h2>
-
-          <div className="space-y-4">
-
-            <div className="flex justify-between border-b pb-3">
-              <span className="text-gray-500">
-                Order ID
-              </span>
-
-              <span className="font-semibold">
-                {order.orderId || order._id}
-              </span>
-            </div>
-
-            <div className="flex justify-between border-b pb-3">
-              <span className="text-gray-500">
-                Payment ID
-              </span>
-
-              <span className="font-semibold">
-                {order.paymentId || "-"}
-              </span>
-            </div>
-
-            <div className="flex justify-between border-b pb-3">
-
-              <span className="text-gray-500">
-                Payment Status
-              </span>
-
-              <span
-                className={`rounded-full px-3 py-1 text-sm font-semibold ${
-                  order.paymentStatus === "Paid"
-                    ? "bg-green-100 text-green-700"
-                    : "bg-red-100 text-red-700"
-                }`}
-              >
-                {order.paymentStatus}
-              </span>
-
-            </div>
-
-            <div className="flex justify-between border-b pb-3">
-
-              <span className="text-gray-500">
-                Order Status
-              </span>
-
-              <span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-semibold text-blue-700">
-                {order.orderStatus}
-              </span>
-
-            </div>
-
-            <div className="flex justify-between">
-
-              <span className="text-gray-500">
-                Order Date
-              </span>
-
-              <span className="font-semibold">
-                {new Date(
-                  order.createdAt
-                ).toLocaleString()}
-              </span>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </div>
-      <div className="rounded-2xl border bg-white shadow-sm">
-
-        <div className="border-b p-6">
-
-          <h2 className="text-2xl font-bold text-green-800">
-            Ordered Products
-          </h2>
-
-        </div>
-
-        <div className="overflow-x-auto">
-
-          <table className="w-full">
-
-            <thead className="bg-green-700 text-white">
-
-              <tr>
-
-                <th className="p-4 text-left">
-                  Product
-                </th>
-
-                <th className="p-4 text-center">
-                  Price
-                </th>
-
-                <th className="p-4 text-center">
-                  Qty
-                </th>
-
-                <th className="p-4 text-center">
-                  Total
-                </th>
-
-              </tr>
-
-            </thead>
-
-            <tbody>
-
-              {order.items.map((item, index) => (
-
-                <tr
-                  key={item.id}
-                  className={
-                    index % 2 === 0
-                      ? "bg-white"
-                      : "bg-gray-50"
-                  }
-                >
-
-                  <td className="border-b p-4">
-
-                    <div className="flex items-center gap-4">
-
-                      <img
-                        src={item.image}
-                        alt={item.name}
-                        className="h-20 w-20 rounded-xl border object-cover"
-                      />
-
-                      <div>
-
-                        <p className="font-semibold text-lg">
-                          {item.name}
-                        </p>
-
-                        <p className="text-sm text-gray-500">
-                          {item.slug}
-                        </p>
-
-                      </div>
-
-                    </div>
-
-                  </td>
-
-                  <td className="border-b text-center font-medium">
-
-                    ₹{item.price.toLocaleString("en-IN")}
-
-                  </td>
-
-                  <td className="border-b text-center">
-
-                    {item.quantity}
-
-                  </td>
-
-                  <td className="border-b text-center font-bold text-green-700">
-
-                    ₹{(
-                      item.price * item.quantity
-                    ).toLocaleString("en-IN")}
-
-                  </td>
-
-                </tr>
-
-              ))}
-
-            </tbody>
-
-          </table>
-
-        </div>
-
-      </div>
-
-      <div className="grid gap-8 lg:grid-cols-2">
-
-        <div className="rounded-2xl border bg-white p-6 shadow-sm">
-
-          <h2 className="mb-6 text-2xl font-bold text-green-800">
-            Order Status
-          </h2>
-
-          <select
-            defaultValue={order.orderStatus}
-            disabled={saving}
-            onChange={(e) =>
-              updateStatus(e.target.value)
-            }
-            className="w-full rounded-lg border-2 border-green-600 px-4 py-3 outline-none"
-          >
-
-            <option value="Pending">
-              Pending
-            </option>
-
-            <option value="Confirmed">
-              Confirmed
-            </option>
-
-            <option value="Processing">
-              Processing
-            </option>
-
-            <option value="Shipped">
-              Shipped
-            </option>
-
-            <option value="Delivered">
-              Delivered
-            </option>
-
-            <option value="Cancelled">
-              Cancelled
-            </option>
-
-          </select>
-
-          <p className="mt-4 text-sm text-gray-500">
-            {saving
-              ? "Updating order status..."
-              : "Select a new order status from the dropdown."}
-          </p>
-
-        </div>
-
-        <div className="rounded-2xl border bg-white p-6 shadow-sm">
-
-          <h2 className="mb-6 text-2xl font-bold text-green-800">
-            Order Summary
-          </h2>
-
-          <div className="space-y-4">
-
-            <div className="flex justify-between">
-
-              <span>
-                Subtotal
-              </span>
-
-              <span>
-                ₹{order.totalAmount.toLocaleString("en-IN")}
-              </span>
-
-            </div>
-
-            <div className="flex justify-between">
-
-              <span>
-                Shipping
-              </span>
-
-              <span className="font-semibold text-green-700">
-                FREE
-              </span>
-
-            </div>
-
-            <div className="flex justify-between">
-
-              <span>
-                GST
-              </span>
-
-              <span>
-                Included
-              </span>
-
-            </div>
-
-            <hr />
-
-            <div className="flex justify-between text-2xl font-bold text-green-700">
-
-              <span>
-                Grand Total
-              </span>
-
-              <span>
-                ₹{order.totalAmount.toLocaleString("en-IN")}
-              </span>
-
-            </div>
-
-          </div>
-
-        </div>
-
-      </div>
-      <div className="rounded-2xl border bg-green-50 p-8">
-
-        <div className="flex flex-col items-center text-center">
-
-          <img
-            src="https://res.cloudinary.com/ss75t6eb/image/upload/v1784422328/HR-Photoroom_dfzxnk.png"
-            alt="Himalayan Roots"
-            className="mb-5 h-20 w-20"
-            crossOrigin="anonymous"
-          />
-
-          <h2 className="text-3xl font-bold text-green-800">
-            Thank You For Shopping ❤️
-          </h2>
-
-          <p className="mt-3 text-gray-700">
-            We sincerely appreciate your trust in Himalayan Roots.
-          </p>
-
-          <p className="mt-2 text-gray-600">
-            We hope you enjoy the authentic taste of Uttarakhand.
-          </p>
-
-          <div className="mt-8 space-y-2 text-gray-700">
-
-            <p>
-              🌐 www.himalayanroots.in
-            </p>
-
-            <p>
-              📧 support@himalayanroots.in
-            </p>
-
-            <p>
-              📞 +91 7895943324
-            </p>
-
-            <p>
-              📍 Mussoorie, Uttarakhand, India
-            </p>
-
-          </div>
-
-        </div>
-
-      </div>
-
-      <div className="flex flex-col justify-between gap-4 rounded-2xl border bg-white p-6 shadow-sm md:flex-row">
-
-        <button
-          onClick={() => router.push("/admin/orders")}
-          className="rounded-lg border border-gray-300 px-6 py-3 font-semibold hover:bg-gray-100"
-        >
-          ← Back to Orders
-        </button>
-
-        <div className="flex flex-wrap gap-4">
-
-          <button
-            onClick={() => window.print()}
-            className="rounded-lg bg-blue-600 px-6 py-3 font-semibold text-white transition hover:bg-blue-700"
+            className="rounded-xl bg-green-800 px-5 py-2.5 font-semibold text-white hover:bg-green-900 shadow-md transition"
           >
             🖨️ Print Invoice
           </button>
-
-          <button
-            onClick={async () => {
-
-              const confirmDelete = window.confirm(
-                "Are you sure you want to delete this order?"
-              );
-
-              if (!confirmDelete) return;
-
-              try {
-
-                const res = await fetch(
-                  `/api/orders/${order._id}`,
-                  {
-                    method: "DELETE",
-                  }
-                );
-
-                const data = await res.json();
-
-                if (data.success) {
-
-                  alert("Order deleted successfully.");
-
-                  router.push("/admin/orders");
-
-                } else {
-
-                  alert(
-                    data.message ||
-                      "Failed to delete order."
-                  );
-
-                }
-
-              } catch (error) {
-
-                console.error(error);
-
-                alert("Something went wrong.");
-
-              }
-
-            }}
-            className="rounded-lg bg-red-600 px-6 py-3 font-semibold text-white transition hover:bg-red-700"
-          >
-            🗑 Delete Order
-          </button>
-
         </div>
-
       </div>
 
+      {/* Customer & Order Info Section */}
+      <div className="grid gap-8 lg:grid-cols-2">
+        {/* Customer Card */}
+        <div className="rounded-2xl border bg-white p-6 shadow-sm space-y-4">
+          <h2 className="text-lg font-bold text-gray-900 border-b pb-3">
+            👤 Customer Information
+          </h2>
+          <div className="space-y-2 text-sm text-gray-700">
+            <p><span className="font-semibold text-gray-900">Name:</span> {order.customer?.name || "N/A"}</p>
+            <p><span className="font-semibold text-gray-900">Phone:</span> {order.customer?.phone || "N/A"}</p>
+            {order.customer?.email && (
+              <p><span className="font-semibold text-gray-900">Email:</span> {order.customer.email}</p>
+            )}
+            <p className="pt-2">
+              <span className="font-semibold text-gray-900 block mb-1">Delivery Address:</span>
+              {order.customer?.address}, {order.customer?.city}, {order.customer?.state} - {order.customer?.pincode}
+            </p>
+            {order.customer?.notes && (
+              <p className="pt-2 text-xs italic text-amber-700 bg-amber-50 p-2.5 rounded-lg border border-amber-200">
+                <strong>Notes:</strong> {order.customer.notes}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Order Meta Info Card */}
+        <div className="rounded-2xl border bg-white p-6 shadow-sm space-y-4">
+          <h2 className="text-lg font-bold text-gray-900 border-b pb-3">
+            📋 Order & Payment Details
+          </h2>
+          <div className="space-y-3 text-sm text-gray-700">
+            <div className="flex justify-between">
+              <span className="font-semibold text-gray-900">Payment ID:</span>
+              <span className="font-mono text-xs bg-gray-100 p-1 px-2 rounded">{order.paymentId || "COD / Pending"}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="font-semibold text-gray-900">Payment Status:</span>
+              <span className={`px-2.5 py-1 rounded-full text-xs font-bold ${
+                order.paymentStatus === "Paid" ? "bg-green-100 text-green-800" : "bg-amber-100 text-amber-800"
+              }`}>
+                {order.paymentStatus || "Pending"}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="font-semibold text-gray-900">Order Status:</span>
+              <span className="px-2.5 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800">
+                {order.orderStatus}
+              </span>
+            </div>
+            <div className="flex justify-between">
+              <span className="font-semibold text-gray-900">Date & Time:</span>
+              <span>{new Date(order.createdAt).toLocaleString("en-IN")}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Products Table */}
+      <div className="rounded-2xl border bg-white p-6 shadow-sm space-y-4 overflow-hidden">
+        <h2 className="text-lg font-bold text-gray-900 border-b pb-3">
+          📦 Ordered Items
+        </h2>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm text-gray-700">
+            <thead className="bg-gray-50 text-xs uppercase font-bold text-gray-500 border-b">
+              <tr>
+                <th className="p-3">Product Name</th>
+                <th className="p-3 text-center">Price</th>
+                <th className="p-3 text-center">Qty</th>
+                <th className="p-3 text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y">
+              {order.items && order.items.length > 0 ? (
+                order.items.map((item, idx) => (
+                  <tr key={idx} className="hover:bg-gray-50">
+                    <td className="p-3 font-semibold text-gray-900">
+                      {item.name}
+                    </td>
+                    <td className="p-3 text-center">₹{item.price}</td>
+                    <td className="p-3 text-center">{item.quantity}</td>
+                    <td className="p-3 text-right font-bold text-gray-900">
+                      ₹{item.price * item.quantity}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan={4} className="p-4 text-center text-gray-400">
+                    No items found in this order.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      {/* Status Update & Summary */}
+      <div className="grid gap-8 lg:grid-cols-2">
+        {/* Status Update Card */}
+        <div className="rounded-2xl border bg-white p-6 shadow-sm space-y-4">
+          <h2 className="text-lg font-bold text-gray-900 border-b pb-3">
+            🔄 Update Order Status
+          </h2>
+          <div className="space-y-3">
+            <label className="block text-sm font-semibold text-gray-700">
+              Change Current Status
+            </label>
+            <select
+              value={order.orderStatus}
+              disabled={saving}
+              onChange={(e) => updateStatus(e.target.value)}
+              className="w-full rounded-xl border p-3 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-700 bg-gray-50"
+            >
+              <option value="Pending">Pending</option>
+              <option value="Processing">Processing</option>
+              <option value="Dispatched">Dispatched</option>
+              <option value="Delivered">Delivered</option>
+              <option value="Cancelled">Cancelled</option>
+            </select>
+            {saving && <p className="text-xs text-green-700 font-medium">Updating status...</p>}
+          </div>
+        </div>
+
+        {/* Order Bill Summary */}
+        <div className="rounded-2xl border bg-white p-6 shadow-sm space-y-3">
+          <h2 className="text-lg font-bold text-gray-900 border-b pb-3">
+            💰 Payment Summary
+          </h2>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between text-gray-600">
+              <span>Subtotal:</span>
+              <span>₹{subtotal}</span>
+            </div>
+            {discountAmount > 0 && (
+              <div className="flex justify-between text-green-700 font-medium">
+                <span>Discount:</span>
+                <span>- ₹{discountAmount}</span>
+              </div>
+            )}
+            <div className="flex justify-between text-gray-600">
+              <span>Shipping Fee:</span>
+              <span className="text-green-700 font-semibold">FREE</span>
+            </div>
+            <div className="flex justify-between text-base font-bold text-gray-900 pt-3 border-t">
+              <span>Total Payable Amount:</span>
+              <span className="text-green-800 text-lg">₹{finalPayable}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer Branding Note */}
+      <div className="rounded-2xl border bg-green-50/50 p-4 text-center text-xs text-green-800 font-medium">
+        Thank you for ordering with Himalayan Roots — Sourced directly from mountain farmers of Uttarakhand.
+      </div>
+
+      {/* Print Specific CSS */}
       <style jsx global>{`
         @media print {
-
           @page {
             size: A4;
             margin: 12mm;
@@ -691,14 +339,15 @@ export default function OrderDetailsPage() {
             print-color-adjust: exact;
           }
 
-          .print\\:hidden,
           nav,
           aside,
           header,
           footer,
-          button {
+          button,
+          select {
             display: none !important;
           }
+
           table {
             width: 100%;
             border-collapse: collapse;
@@ -711,44 +360,16 @@ export default function OrderDetailsPage() {
             padding: 10px;
           }
 
-          img {
-            max-width: 100% !important;
-            display: block !important;
-            page-break-inside: avoid;
-          }
-
-          .bg-green-700,
-          .bg-gradient-to-r {
-            background: #166534 !important;
-            color: #ffffff !important;
-          }
-
-          .text-green-700,
-          .text-green-800 {
-            color: #166534 !important;
-          }
-
           .shadow-sm,
-          .shadow-md,
-          .shadow-lg,
-          .shadow-xl {
+          .shadow-md {
             box-shadow: none !important;
           }
 
-          .rounded-lg,
-          .rounded-xl,
           .rounded-2xl {
             border-radius: 8px !important;
           }
-
-          a {
-            color: inherit !important;
-            text-decoration: none !important;
-          }
-
         }
       `}</style>
-
     </div>
   );
 }

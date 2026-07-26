@@ -53,8 +53,8 @@ export default function AdminSidebar() {
     },
 
     {
-      title: "Website Settings",
-      href: "/admin/settings",
+      title: "Website CMS Settings",
+      href: "/admin/cms",
       icon: Settings,
     },
 

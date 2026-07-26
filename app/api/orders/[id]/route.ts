@@ -3,6 +3,13 @@ import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Order from "@/database/Order";
 
+import { sendEmail } from "@/lib/email";
+
+import {
+  orderShippedTemplate,
+  orderDeliveredTemplate,
+} from "@/lib/emailTemplates";
+
 interface RouteParams {
   params: Promise<{
     id: string;
@@ -22,7 +29,7 @@ export async function GET(
 
     const { id } = await params;
 
-    const order = await Order.findById(id);
+    const order = await Order.findById(id).lean();
 
     if (!order) {
       return NextResponse.json(
@@ -40,9 +47,7 @@ export async function GET(
       success: true,
       order,
     });
-
   } catch (error) {
-
     console.error("Get Order Error:", error);
 
     return NextResponse.json(
@@ -90,20 +95,70 @@ export async function PATCH(
 
     await order.save();
 
+    // ==========================
+    // SEND EMAIL
+    // ==========================
+
+    try {
+      if (order.customer?.email) {
+        if (order.orderStatus === "Shipped") {
+          await sendEmail({
+            to: order.customer.email,
+            subject:
+              "Your Himalayan Roots Order has been Shipped 📦",
+            html: orderShippedTemplate({
+              customerName: order.customer.name,
+              orderId:
+                order.orderId || order._id.toString(),
+              amount:
+                order.finalAmount ||
+                order.totalAmount,
+            }),
+          });
+        }
+
+        if (order.orderStatus === "Delivered") {
+          await sendEmail({
+            to: order.customer.email,
+            subject:
+              "Your Himalayan Roots Order has been Delivered ✅",
+            html: orderDeliveredTemplate({
+              customerName: order.customer.name,
+              orderId:
+                order.orderId || order._id.toString(),
+              amount:
+                order.finalAmount ||
+                order.totalAmount,
+            }),
+          });
+        }
+      }
+    } catch (emailError) {
+      console.error(
+        "Status Email Error:",
+        emailError
+      );
+    }
+
+    const updatedOrder =
+      await Order.findById(id).lean();
+
     return NextResponse.json({
       success: true,
       message: "Order updated successfully",
-      order,
+      order: updatedOrder,
     });
-
   } catch (error) {
-
-    console.error("Update Order Error:", error);
+    console.error(
+      "Update Order Error:",
+      error
+    );
 
     return NextResponse.json(
       {
         success: false,
-        message: "Failed to update order",
+        message:
+          "Failed to update order",
       },
       {
         status: 500,
@@ -111,6 +166,7 @@ export async function PATCH(
     );
   }
 }
+
 // ===========================
 // DELETE ORDER
 // ===========================
@@ -124,7 +180,8 @@ export async function DELETE(
 
     const { id } = await params;
 
-    const order = await Order.findById(id);
+    const order =
+      await Order.findById(id);
 
     if (!order) {
       return NextResponse.json(
@@ -142,17 +199,20 @@ export async function DELETE(
 
     return NextResponse.json({
       success: true,
-      message: "Order deleted successfully",
+      message:
+        "Order deleted successfully",
     });
-
   } catch (error) {
-
-    console.error("Delete Order Error:", error);
+    console.error(
+      "Delete Order Error:",
+      error
+    );
 
     return NextResponse.json(
       {
         success: false,
-        message: "Failed to delete order",
+        message:
+          "Failed to delete order",
       },
       {
         status: 500,

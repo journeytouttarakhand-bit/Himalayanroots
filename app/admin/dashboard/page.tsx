@@ -15,14 +15,19 @@ type DashboardData = {
 
   overview: {
     totalRevenue: number;
+    todayRevenue: number;
+    averageOrderValue: number;
+    todayOrdersCount: number;
     totalOrders: number;
     totalProducts: number;
     totalCategories: number;
     totalCustomers: number;
-
     pendingOrders: number;
     deliveredOrders: number;
     cancelledOrders: number;
+    activeCoupons: number;
+    totalReviews: number;
+    averageRating: number;
   };
 
   monthlySales: {
@@ -36,6 +41,13 @@ type DashboardData = {
   lowStockProducts: any[];
 
   outOfStockProducts: any[];
+
+  topProducts: {
+    name: string;
+    image: string;
+    sold: number;
+    revenue: number;
+  }[];
 };
 
 export default function DashboardPage() {
@@ -81,6 +93,7 @@ export default function DashboardPage() {
 
   async function handleLogout() {
     try {
+
       await fetch("/api/admin/logout", {
         method: "POST",
       });
@@ -182,7 +195,7 @@ export default function DashboardPage() {
       />
 
       <TopProducts
-        products={data.lowStockProducts}
+        products={data.topProducts}
       />
 
     </div>

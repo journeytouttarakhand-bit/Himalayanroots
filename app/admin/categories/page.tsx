@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import AdminHeader from "@/app/components/cms/AdminHeader";
 
 type Category = {
   _id: string;
@@ -24,12 +25,8 @@ export default function CategoriesPage() {
   useEffect(() => {
     const filtered = categories.filter((category) => {
       return (
-        category.name
-          .toLowerCase()
-          .includes(search.toLowerCase()) ||
-        category.slug
-          .toLowerCase()
-          .includes(search.toLowerCase())
+        category.name.toLowerCase().includes(search.toLowerCase()) ||
+        category.slug.toLowerCase().includes(search.toLowerCase())
       );
     });
 
@@ -39,7 +36,6 @@ export default function CategoriesPage() {
   async function fetchCategories() {
     try {
       const res = await fetch("/api/categories");
-
       const data = await res.json();
 
       if (data.success) {
@@ -54,9 +50,7 @@ export default function CategoriesPage() {
   }
 
   async function deleteCategory(id: string) {
-    const ok = confirm(
-      "Are you sure you want to delete this category?"
-    );
+    const ok = confirm("Are you sure you want to delete this category?");
 
     if (!ok) return;
 
@@ -69,196 +63,134 @@ export default function CategoriesPage() {
 
       if (data.success) {
         alert("Category Deleted Successfully");
-
         fetchCategories();
       } else {
         alert(data.message);
       }
     } catch (error) {
       console.error(error);
-
       alert("Something went wrong");
     }
   }
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen text-2xl font-bold">
-        Loading...
+      <div className="flex h-[60vh] justify-center items-center text-xl font-bold text-gray-600">
+        Loading Categories...
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto py-10 px-6">
+    <div className="max-w-7xl mx-auto py-8 px-6 space-y-6">
+      
+      {/* 🌟 Top Header with Back Button */}
+      <AdminHeader
+        title="Categories Management"
+        description={`Total Categories: ${filteredCategories.length}`}
+      />
 
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-5 mb-8">
-
-        <h1 className="text-4xl font-bold text-green-900">
-          Categories
-        </h1>
-
+      {/* Action Bar */}
+      <div className="flex justify-end mb-4">
         <Link
           href="/admin/categories/new"
-          className="bg-green-700 hover:bg-green-800 text-white px-6 py-3 rounded-lg font-semibold"
+          className="bg-green-700 hover:bg-green-800 text-white px-6 py-2.5 rounded-xl font-semibold transition shadow-sm flex items-center gap-2"
         >
-          + Add Category
+          <span>+</span> Add Category
         </Link>
-
       </div>
 
+      {/* Search Input */}
       <input
         type="text"
-        placeholder="Search Category..."
+        placeholder="Search Category by name or slug..."
         value={search}
-        onChange={(e) =>
-          setSearch(e.target.value)
-        }
-        className="w-full border rounded-lg p-3 mb-6"
+        onChange={(e) => setSearch(e.target.value)}
+        className="w-full border rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-green-700 bg-white"
       />
-      <div className="overflow-x-auto bg-white rounded-xl shadow-lg border">
 
-        <table className="w-full">
-
-          <thead className="bg-green-700 text-white">
-
+      {/* Categories Table */}
+      <div className="overflow-x-auto bg-white rounded-2xl shadow-sm border">
+        <table className="w-full text-sm">
+          <thead className="bg-green-800 text-white font-semibold">
             <tr>
-
-              <th className="text-left p-4">
-                Image
-              </th>
-
-              <th className="text-left p-4">
-                Name
-              </th>
-
-              <th className="text-left p-4">
-                Slug
-              </th>
-
-              <th className="text-left p-4">
-                Status
-              </th>
-
-              <th className="text-center p-4">
-                Actions
-              </th>
-
+              <th className="text-left p-4">Image</th>
+              <th className="text-left p-4">Name</th>
+              <th className="text-left p-4">Slug</th>
+              <th className="text-left p-4">Status</th>
+              <th className="text-center p-4">Actions</th>
             </tr>
-
           </thead>
 
-          <tbody>
-
+          <tbody className="divide-y">
             {filteredCategories.length === 0 ? (
-
               <tr>
-
                 <td
                   colSpan={5}
-                  className="text-center py-10 text-gray-500"
+                  className="text-center py-10 text-gray-500 font-medium"
                 >
                   No Categories Found
                 </td>
-
               </tr>
-
             ) : (
-
               filteredCategories.map((category) => (
-
-                <tr
-                  key={category._id}
-                  className="border-b hover:bg-gray-50"
-                >
-
+                <tr key={category._id} className="hover:bg-gray-50 transition">
                   <td className="p-4">
-
                     {category.image ? (
-
                       <img
                         src={category.image}
                         alt={category.name}
                         className="w-16 h-16 object-cover rounded-lg border"
                       />
-
                     ) : (
-
-                      <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center text-gray-400">
+                      <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center text-xs text-gray-400">
                         No Image
                       </div>
-
                     )}
-
                   </td>
 
-                  <td className="p-4 font-semibold">
+                  <td className="p-4 font-bold text-gray-900">
                     {category.name}
                   </td>
 
-                  <td className="p-4">
+                  <td className="p-4 font-mono text-gray-500 text-xs">
                     {category.slug}
                   </td>
 
                   <td className="p-4">
-
                     {category.active ? (
-
-                      <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-semibold">
+                      <span className="bg-emerald-100 text-emerald-800 px-3 py-1 rounded-full text-xs font-bold">
                         Active
                       </span>
-
                     ) : (
-
-                      <span className="bg-red-100 text-red-700 px-3 py-1 rounded-full text-sm font-semibold">
+                      <span className="bg-red-100 text-red-800 px-3 py-1 rounded-full text-xs font-bold">
                         Inactive
                       </span>
-
                     )}
-
                   </td>
 
                   <td className="p-4">
-                    <div className="flex justify-center gap-3">
+                    <div className="flex justify-center gap-2">
                       <Link
                         href={`/admin/categories/edit/${category._id}`}
-                        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-semibold"
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold transition"
                       >
                         Edit
                       </Link>
 
                       <button
-                        onClick={() =>
-                          deleteCategory(category._id)
-                        }
-                        className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-semibold"
+                        onClick={() => deleteCategory(category._id)}
+                        className="bg-red-600 hover:bg-red-700 text-white px-3.5 py-1.5 rounded-lg text-xs font-semibold transition"
                       >
                         Delete
                       </button>
-
                     </div>
-
                   </td>
-
                 </tr>
-
               ))
-
             )}
-
           </tbody>
-
         </table>
-
-      </div>
-
-      <div className="mt-8 text-gray-500 text-sm">
-
-        Total Categories :
-        <span className="font-bold text-green-700 ml-2">
-          {filteredCategories.length}
-        </span>
-
       </div>
     </div>
   );

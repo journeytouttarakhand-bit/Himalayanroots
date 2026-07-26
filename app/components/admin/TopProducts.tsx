@@ -2,42 +2,58 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Package, ArrowRight } from "lucide-react";
+
+import {
+  Trophy,
+  ArrowRight,
+  TrendingUp,
+} from "lucide-react";
 
 type Product = {
-  _id: string;
+
   name: string;
+
   image: string;
-  stock: number;
+
+  sold: number;
+
+  revenue: number;
+
 };
 
 type Props = {
+
   products: Product[];
+
 };
 
 export default function TopProducts({
-  products,
-}: Props) {
-  return (
-    <div className="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
 
-      <div className="flex items-center justify-between px-6 py-5 border-b">
+  products,
+
+}: Props) {
+
+  return (
+
+    <div className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
+
+      <div className="flex items-center justify-between border-b px-6 py-5">
 
         <div>
 
           <h2 className="text-xl font-bold text-gray-800">
-            Top Products
+            Best Selling Products
           </h2>
 
-          <p className="text-sm text-gray-500 mt-1">
-            Best performing products
+          <p className="mt-1 text-sm text-gray-500">
+            Highest selling products
           </p>
 
         </div>
 
-        <Package
-          className="text-green-600"
+        <Trophy
           size={28}
+          className="text-yellow-500"
         />
 
       </div>
@@ -48,31 +64,33 @@ export default function TopProducts({
 
           <div className="py-12 text-center">
 
-            <Package
+            <Trophy
               size={48}
               className="mx-auto text-gray-300"
             />
 
             <p className="mt-4 text-gray-500">
-              No products available.
+              No sales available.
             </p>
 
           </div>
 
         ) : (
 
-          products.map((product) => (
+          products.map((product, index) => (
 
             <div
-              key={product._id}
-              className="flex items-center justify-between gap-4 px-6 py-4 hover:bg-gray-50 transition-all"
+
+              key={index}
+
+              className="flex items-center justify-between gap-4 px-6 py-4 transition-all hover:bg-gray-50"
+
             >
 
               <div className="flex items-center gap-4">
 
                 <div className="relative h-16 w-16 overflow-hidden rounded-xl border bg-gray-100">
-
-                  <Image
+                                      <Image
                     src={product.image}
                     alt={product.name}
                     fill
@@ -87,9 +105,16 @@ export default function TopProducts({
                     {product.name}
                   </h3>
 
-                  <p className="mt-1 text-sm text-gray-500">
-                    Stock Available
-                  </p>
+                  <div className="mt-2 flex items-center gap-2 text-sm text-gray-500">
+
+                    <TrendingUp
+                      size={16}
+                      className="text-green-600"
+                    />
+
+                    Sold {product.sold} Units
+
+                  </div>
 
                 </div>
 
@@ -97,22 +122,17 @@ export default function TopProducts({
 
               <div className="text-right">
 
-                <div className="inline-flex rounded-full bg-green-100 px-3 py-1 text-sm font-semibold text-green-700">
-                  {product.stock} Left
-                </div>
-                <div className="mt-3">
+                <div className="rounded-full bg-green-100 px-3 py-1 text-sm font-bold text-green-700">
 
-                  <Link
-                    href={`/admin/products/${product._id}`}
-                    className="inline-flex items-center gap-2 text-sm font-semibold text-green-600 hover:text-green-700"
-                  >
-                    Manage
-
-                    <ArrowRight size={16} />
-
-                  </Link>
+                  ₹{product.revenue.toLocaleString()}
 
                 </div>
+
+                <p className="mt-2 text-xs text-gray-500">
+
+                  Total Revenue
+
+                </p>
 
               </div>
 
@@ -125,8 +145,7 @@ export default function TopProducts({
       </div>
 
       <div className="border-t bg-gray-50 px-6 py-4">
-
-        <Link
+                <Link
           href="/admin/products"
           className="inline-flex items-center gap-2 rounded-lg bg-green-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-green-700"
         >
@@ -139,5 +158,7 @@ export default function TopProducts({
       </div>
 
     </div>
+
   );
+
 }

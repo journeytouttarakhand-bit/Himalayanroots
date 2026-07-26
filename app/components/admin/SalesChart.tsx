@@ -1,5 +1,7 @@
 "use client";
 
+import { useMemo, useState } from "react";
+
 import {
   ResponsiveContainer,
   AreaChart,
@@ -38,93 +40,149 @@ const months = [
 export default function SalesChart({
   data,
 }: Props) {
-  const chartData = months.map((month, index) => {
-    const item = data.find(
-      (m) => m.month === index
+
+  const [view, setView] = useState<
+    "revenue" | "orders"
+  >("revenue");
+
+  const chartData = useMemo(() => {
+
+    return months.map(
+      (month, index) => {
+
+        const item = data.find(
+          (m) => m.month === index
+        );
+
+        return {
+
+          month,
+
+          revenue:
+            item?.revenue || 0,
+
+          orders:
+            item?.orders || 0,
+
+        };
+
+      }
     );
 
-    return {
-      month,
-      revenue: item?.revenue || 0,
-      orders: item?.orders || 0,
-    };
-  });
+  }, [data]);
 
-  const totalRevenue = chartData.reduce(
-    (sum, item) => sum + item.revenue,
-    0
-  );
+  const totalRevenue =
+    chartData.reduce(
+      (sum, item) =>
+        sum + item.revenue,
+      0
+    );
 
-  const totalOrders = chartData.reduce(
-    (sum, item) => sum + item.orders,
-    0
-  );
+  const totalOrders =
+    chartData.reduce(
+      (sum, item) =>
+        sum + item.orders,
+      0
+    );
 
-  const averageRevenue =
+  const averageOrderValue =
     totalOrders > 0
-      ? Math.round(totalRevenue / totalOrders)
+      ? Math.round(
+          totalRevenue /
+            totalOrders
+        )
       : 0;
 
   return (
+
     <div className="rounded-2xl border border-gray-200 bg-white shadow-sm">
 
       <div className="flex flex-col gap-6 border-b p-6 lg:flex-row lg:items-center lg:justify-between">
 
         <div>
 
-          <h2 className="text-xl font-bold text-gray-800">
-            Sales Overview
+          <h2 className="text-2xl font-bold text-gray-800">
+            Sales Analytics
           </h2>
 
           <p className="mt-1 text-sm text-gray-500">
-            Monthly revenue & orders
+            Revenue & Orders Overview
           </p>
 
         </div>
 
-        <div className="grid grid-cols-3 gap-6">
+        <div className="flex items-center gap-3">
 
-          <div>
+          <button
+            onClick={() =>
+              setView("revenue")
+            }
+            className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
+              view === "revenue"
+                ? "bg-green-600 text-white"
+                : "bg-gray-100 text-gray-700"
+            }`}
+          >
+            Revenue
+          </button>
 
-            <p className="text-xs uppercase tracking-wide text-gray-500">
-              Revenue
-            </p>
-
-            <h3 className="mt-1 text-2xl font-bold text-green-600">
-              ₹{totalRevenue.toLocaleString()}
-            </h3>
-
-          </div>
-
-          <div>
-
-            <p className="text-xs uppercase tracking-wide text-gray-500">
-              Orders
-            </p>
-
-            <h3 className="mt-1 text-2xl font-bold text-blue-600">
-              {totalOrders}
-            </h3>
-
-          </div>
-
-          <div>
-
-            <p className="text-xs uppercase tracking-wide text-gray-500">
-              Avg Order
-            </p>
-
-            <h3 className="mt-1 text-2xl font-bold text-orange-600">
-              ₹{averageRevenue.toLocaleString()}
-            </h3>
-
-          </div>
+          <button
+            onClick={() =>
+              setView("orders")
+            }
+            className={`rounded-lg px-4 py-2 text-sm font-semibold transition ${
+              view === "orders"
+                ? "bg-blue-600 text-white"
+                : "bg-gray-100 text-gray-700"
+            }`}
+          >
+            Orders
+          </button>
 
         </div>
 
       </div>
 
-      <div className="h-[420px] w-full p-5">
+      <div className="grid grid-cols-3 gap-6 border-b p-6">
+                <div>
+
+          <p className="text-xs uppercase tracking-wide text-gray-500">
+            Revenue
+          </p>
+
+          <h3 className="mt-1 text-2xl font-bold text-green-600">
+            ₹{totalRevenue.toLocaleString()}
+          </h3>
+
+        </div>
+
+        <div>
+
+          <p className="text-xs uppercase tracking-wide text-gray-500">
+            Orders
+          </p>
+
+          <h3 className="mt-1 text-2xl font-bold text-blue-600">
+            {totalOrders}
+          </h3>
+
+        </div>
+
+        <div>
+
+          <p className="text-xs uppercase tracking-wide text-gray-500">
+            Avg Order
+          </p>
+
+          <h3 className="mt-1 text-2xl font-bold text-orange-600">
+            ₹{averageOrderValue.toLocaleString()}
+          </h3>
+
+        </div>
+
+      </div>
+
+      <div className="h-[430px] w-full p-5">
 
         <ResponsiveContainer
           width="100%"
@@ -153,20 +211,29 @@ export default function SalesChart({
 
                 <stop
                   offset="5%"
-                  stopColor="#16a34a"
+                  stopColor={
+                    view === "revenue"
+                      ? "#16a34a"
+                      : "#2563eb"
+                  }
                   stopOpacity={0.45}
                 />
 
                 <stop
                   offset="95%"
-                  stopColor="#16a34a"
+                  stopColor={
+                    view === "revenue"
+                      ? "#16a34a"
+                      : "#2563eb"
+                  }
                   stopOpacity={0}
                 />
 
               </linearGradient>
 
             </defs>
-                        <CartesianGrid
+
+            <CartesianGrid
               strokeDasharray="3 3"
               vertical={false}
             />
@@ -186,16 +253,21 @@ export default function SalesChart({
                 fill: "#6b7280",
                 fontSize: 13,
               }}
-              tickFormatter={(value) =>
-                `₹${Number(value).toLocaleString()}`
-              }
               tickLine={false}
               axisLine={false}
+              tickFormatter={(value) =>
+                view === "revenue"
+                  ? `₹${Number(value).toLocaleString()}`
+                  : String(value)
+              }
             />
 
             <Tooltip
               cursor={{
-                stroke: "#16a34a",
+                stroke:
+                  view === "revenue"
+                    ? "#16a34a"
+                    : "#2563eb",
                 strokeDasharray: "5 5",
               }}
               contentStyle={{
@@ -204,25 +276,27 @@ export default function SalesChart({
                 boxShadow:
                   "0 10px 25px rgba(0,0,0,0.08)",
               }}
-              formatter={(value, name) => {
-                if (String(name) === "revenue") {
-                  return [
-                    `₹${Number(value).toLocaleString()}`,
-                    "Revenue",
-                  ] as const;
-                }
+              formatter={(value) => [
 
-                return [
-                  Number(value),
-                  "Orders",
-                ] as const;
-              }}
+                view === "revenue"
+                  ? `₹${Number(value).toLocaleString()}`
+                  : Number(value),
+
+                view === "revenue"
+                  ? "Revenue"
+                  : "Orders",
+
+              ]}
             />
 
             <Area
               type="monotone"
-              dataKey="revenue"
-              stroke="#16a34a"
+              dataKey={view}
+              stroke={
+                view === "revenue"
+                  ? "#16a34a"
+                  : "#2563eb"
+              }
               strokeWidth={3}
               fill="url(#salesGradient)"
               activeDot={{
@@ -239,29 +313,43 @@ export default function SalesChart({
       <div className="border-t px-6 py-5">
 
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                      {chartData.map((item) => (
 
-          {chartData.map((item) => (
             <div
               key={item.month}
-              className="rounded-xl border border-gray-200 p-4 transition-all duration-300 hover:border-green-500"
+              className="rounded-xl border border-gray-200 p-4 transition-all duration-300 hover:border-green-500 hover:shadow-sm"
             >
+
               <p className="text-sm font-medium text-gray-500">
                 {item.month}
               </p>
 
               <h4 className="mt-2 text-lg font-bold text-gray-800">
-                ₹{item.revenue.toLocaleString()}
+
+                {view === "revenue"
+                  ? `₹${item.revenue.toLocaleString()}`
+                  : item.orders}
+
               </h4>
 
               <p className="mt-1 text-sm text-gray-500">
-                {item.orders} Orders
+
+                {view === "revenue"
+                  ? `${item.orders} Orders`
+                  : `₹${item.revenue.toLocaleString()}`}
+
               </p>
+
             </div>
+
           ))}
 
         </div>
 
       </div>
-          </div>
+
+    </div>
+
   );
+
 }

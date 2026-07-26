@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { verifyToken } from "@/lib/auth";
+
 export async function middleware(
   request: NextRequest
 ) {
-  const { pathname } = request.nextUrl;
+  const { pathname } =
+    request.nextUrl;
 
   // =====================================
   // Allow Admin Panel
@@ -38,6 +41,54 @@ export async function middleware(
   }
 
   // =====================================
+  // Customer Protected Routes
+  // =====================================
+
+  const protectedRoutes = [
+    "/profile",
+    "/checkout",
+    "/my-orders",
+  ];
+
+  const isProtected =
+    protectedRoutes.some((route) =>
+      pathname.startsWith(route)
+    );
+
+  if (isProtected) {
+
+    const token =
+      request.cookies.get("token")
+        ?.value;
+
+    if (!token) {
+
+      return NextResponse.redirect(
+        new URL(
+          "/login",
+          request.url
+        )
+      );
+
+    }
+
+    const decoded =
+      verifyToken(token);
+
+    if (!decoded) {
+
+      return NextResponse.redirect(
+        new URL(
+          "/login",
+          request.url
+        )
+      );
+
+    }
+
+  }
+
+  // =====================================
   // Prevent Redirect Loop
   // =====================================
 
@@ -47,22 +98,29 @@ export async function middleware(
     return NextResponse.next();
   }
 
+  // =====================================
+  // Maintenance Mode
+  // =====================================
+
   try {
 
-    const response = await fetch(
-      `${request.nextUrl.origin}/api/settings`,
-      {
-        cache: "no-store",
-      }
-    );
+    const response =
+      await fetch(
+        `${request.nextUrl.origin}/api/settings`,
+        {
+          cache: "no-store",
+        }
+      );
 
     if (!response.ok) {
       return NextResponse.next();
     }
 
-    const data = await response.json();
+    const data =
+      await response.json();
 
-    const settings = data.settings;
+    const settings =
+      data.settings;
 
     if (
       settings?.maintenanceMode
@@ -76,7 +134,8 @@ export async function middleware(
       );
 
     }
-        return NextResponse.next();
+
+    return NextResponse.next();
 
   } catch (error) {
 
@@ -93,16 +152,6 @@ export async function middleware(
 
 export const config = {
   matcher: [
-
-    /*
-     * Apply middleware to all pages except:
-     * - API Routes
-     * - Next.js Assets
-     * - Images
-     * - Static Files
-     */
-
     "/((?!api|_next/static|_next/image|favicon.ico|.*\\..*).*)",
-
   ],
 };

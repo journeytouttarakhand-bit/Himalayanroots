@@ -1,139 +1,77 @@
-import connectDB from "@/lib/mongodb";
-
+import { unstable_noStore as noStore } from "next/cache";
+import connectToDatabase from "@/lib/mongodb";
 import SiteSettings from "@/database/SiteSettings";
 
 export default async function getSiteSettings() {
+  // Disable Next.js data caching so every request fetches fresh DB values
+  noStore();
+
   try {
-    await connectDB();
+    await connectToDatabase();
 
     let settings = await SiteSettings.findOne().lean();
 
     if (!settings) {
-      settings = await SiteSettings.create({});
-      settings = await SiteSettings.findOne().lean();
+      const newSettings = await SiteSettings.create({});
+      settings = newSettings.toObject();
     }
 
-    return JSON.parse(
-      JSON.stringify(settings)
-    );
-
+    return JSON.parse(JSON.stringify(settings));
   } catch (error) {
+    console.error("Get Site Settings Error:", error);
 
-    console.error(
-      "Get Site Settings Error:",
-      error
-    );
-
+    // Default Fallbacks aligned with Database Schema
     return {
-
-      //----------------------------------
-      // General
-      //----------------------------------
-
+      // General & Appearance
       siteName: "Himalayan Roots",
-
       tagline: "Pure Taste of Uttarakhand",
+      siteDescription: "Buy authentic Himalayan products directly sourced from Uttarakhand farmers.",
+      logo: "/logo.png",
+      favicon: "/favicon.ico",
+      primaryColor: "#166534",
+      secondaryColor: "#65A30D",
+      fontFamily: "sans-serif",
 
-      logo: "",
-
-      favicon: "",
-
-      //----------------------------------
       // Hero
-      //----------------------------------
-
-      heroTitle:
-        "Authentic Himalayan Products",
-
-      heroSubtitle:
-        "Directly sourced from the farmers of Uttarakhand.",
-
+      heroTitle: "Authentic Himalayan Products",
+      heroSubtitle: "Directly sourced from the farmers of Uttarakhand.",
       heroButtonText: "Shop Now",
-
       heroButtonLink: "/products",
+      heroImage: "/images/hero-bg.jpg",
 
-      heroImage: "",
-
-      //----------------------------------
       // Announcement Bar
-      //----------------------------------
-
       announcementEnabled: true,
-
-      announcementText:
-        "🚚 Free Shipping on Orders Above ₹999",
-
-      announcementBackground:
-        "#14532d",
-
-      announcementTextColor:
-        "#ffffff",
-
+      announcementText: "🚚 Free Shipping on Orders Above ₹999",
+      announcementBackground: "#166534",
+      announcementTextColor: "#ffffff",
       announcementLink: "",
-
       announcementButtonText: "",
 
-      //----------------------------------
-      // Theme
-      //----------------------------------
-
-      primaryColor: "#166534",
-
-      secondaryColor: "#15803d",
-
-      fontFamily: "Inter",
-
-      //----------------------------------
       // Contact
-      //----------------------------------
+      contactPhone: "+91 XXXXX XXXXX",
+      contactEmail: "support@himalayanroots.com",
+      address: "Uttarakhand, India",
+      workingHours: "Mon - Sat: 9:00 AM - 6:00 PM",
 
-      phone: "",
-
-      email: "",
-
-      address: "",
-            //----------------------------------
       // Social Links
-      //----------------------------------
+      facebookUrl: "",
+      instagramUrl: "",
+      twitterUrl: "",
+      youtubeUrl: "",
+      whatsappNumber: "",
 
-      facebook: "",
-
-      instagram: "",
-
-      youtube: "",
-
-      whatsapp: "",
-
-      //----------------------------------
       // Footer
-      //----------------------------------
+      footerAboutText: "Bringing authentic Himalayan products directly from Uttarakhand farmers to every home in India.",
+      copyrightText: "© Himalayan Roots. All Rights Reserved.",
 
-      footerDescription:
-        "Bringing authentic Himalayan products directly from Uttarakhand farmers to every home in India.",
-
-      copyrightText:
-        "© Himalayan Roots. All Rights Reserved.",
-
-      //----------------------------------
       // SEO
-      //----------------------------------
-
       metaTitle: "Himalayan Roots",
+      metaDescription: "Buy authentic Himalayan products directly sourced from Uttarakhand farmers.",
+      keywords: "Himalayan Roots, Uttarakhand Products, Organic Ghee, Pure Honey",
 
-      metaDescription:
-        "Buy authentic Himalayan products directly sourced from Uttarakhand farmers.",
-
-      metaKeywords:
-        "Himalayan Roots, Uttarakhand Products",
-
-      //----------------------------------
       // Maintenance
-      //----------------------------------
-
       maintenanceMode: false,
-
-      maintenanceMessage:
-        "Website is under maintenance.",
+      maintenanceMessage: "Website is under maintenance.",
     };
   }
 }

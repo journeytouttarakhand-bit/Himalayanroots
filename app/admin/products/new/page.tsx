@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import ImageUploader from "../../../components/admin/ImageUploader";
+import AdminHeader from "@/app/components/cms/AdminHeader";
 
 type Category = {
   _id: string;
@@ -11,9 +12,7 @@ type Category = {
 
 export default function AddProductPage() {
   const router = useRouter();
-
   const [loading, setLoading] = useState(false);
-
   const [categories, setCategories] = useState<Category[]>([]);
 
   const [form, setForm] = useState({
@@ -21,32 +20,19 @@ export default function AddProductPage() {
     slug: "",
     category: "",
     description: "",
-
     price: "",
     salePrice: "",
-
     stock: "",
-
     image: "",
-
     rating: "5",
-
     weight: "",
-
     sku: "",
-
     tags: "",
-
     featured: false,
-
     bestSeller: false,
-
     newArrival: false,
-
     trending: false,
-
     onSale: false,
-
     active: true,
   });
 
@@ -57,15 +43,10 @@ export default function AddProductPage() {
   async function fetchCategories() {
     try {
       const res = await fetch("/api/categories");
-
       const data = await res.json();
 
       if (data.success) {
-        setCategories(
-          data.categories.filter(
-            (item: any) => item.active
-          )
-        );
+        setCategories(data.categories.filter((item: any) => item.active));
       }
     } catch (error) {
       console.error(error);
@@ -74,21 +55,17 @@ export default function AddProductPage() {
 
   function handleChange(
     e: React.ChangeEvent<
-      HTMLInputElement |
-      HTMLTextAreaElement |
-      HTMLSelectElement
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
     >
   ) {
     const { name, value, type } = e.target;
 
     if (type === "checkbox") {
       const checked = (e.target as HTMLInputElement).checked;
-
       setForm((prev) => ({
         ...prev,
         [name]: checked,
       }));
-
       return;
     }
 
@@ -98,9 +75,7 @@ export default function AddProductPage() {
     }));
   }
 
-  async function handleSubmit(
-    e: React.FormEvent
-  ) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
     if (!form.image) {
@@ -111,61 +86,37 @@ export default function AddProductPage() {
     setLoading(true);
 
     try {
-      const res = await fetch(
-        "/api/all-products",
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type": "application/json",
-          },
-
-          body: JSON.stringify({
-            ...form,
-
-            price: Number(form.price),
-
-            salePrice: Number(
-              form.salePrice || 0
-            ),
-
-            stock: Number(form.stock),
-
-            rating: Number(form.rating),
-
-            tags: form.tags
-              .split(",")
-              .map((item) => item.trim())
-              .filter(Boolean),
-          }),
-        }
-      );
+      const res = await fetch("/api/all-products", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          ...form,
+          price: Number(form.price),
+          salePrice: Number(form.salePrice || 0),
+          stock: Number(form.stock),
+          rating: Number(form.rating),
+          tags: form.tags
+            .split(",")
+            .map((item) => item.trim())
+            .filter(Boolean),
+        }),
+      });
 
       const data = await res.json();
 
       if (!data.success) {
-        alert(
-          data.message ||
-            "Failed to add product"
-        );
-
+        alert(data.message || "Failed to add product");
         setLoading(false);
-
         return;
       }
 
-      alert(
-        "✅ Product Added Successfully"
-      );
-
+      alert("✅ Product Added Successfully");
       router.push("/admin/products");
-
     } catch (error) {
-
       console.error(error);
-
       alert("Something went wrong.");
-
     }
 
     setLoading(false);
@@ -173,16 +124,17 @@ export default function AddProductPage() {
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-10">
-
-      <h1 className="mb-8 text-4xl font-bold text-green-900">
-        Add Product
-      </h1>
+      
+      {/* 🌟 Naya Admin Header Back Button ke sath */}
+      <AdminHeader 
+        title="Add New Product" 
+        description="Fill in the details below to list a new product in your store." 
+      />
 
       <form
         onSubmit={handleSubmit}
         className="space-y-6 rounded-xl bg-white p-8 shadow-lg"
       >
-
         <input
           type="text"
           name="name"
@@ -204,11 +156,7 @@ export default function AddProductPage() {
         />
 
         <div>
-
-          <label className="mb-2 block font-semibold">
-            Category
-          </label>
-
+          <label className="mb-2 block font-semibold">Category</label>
           <select
             name="category"
             value={form.category}
@@ -216,24 +164,13 @@ export default function AddProductPage() {
             className="w-full rounded-lg border p-3"
             required
           >
-
-            <option value="">
-              Select Category
-            </option>
-
+            <option value="">Select Category</option>
             {categories.map((category) => (
-
-              <option
-                key={category._id}
-                value={category.name}
-              >
+              <option key={category._id} value={category.name}>
                 {category.name}
               </option>
-
             ))}
-
           </select>
-
         </div>
 
         <textarea
@@ -245,8 +182,8 @@ export default function AddProductPage() {
           className="w-full resize-none rounded-lg border p-3"
           required
         />
-                <div className="grid gap-5 md:grid-cols-2">
 
+        <div className="grid gap-5 md:grid-cols-2">
           <input
             type="number"
             name="price"
@@ -265,11 +202,9 @@ export default function AddProductPage() {
             onChange={handleChange}
             className="w-full rounded-lg border p-3"
           />
-
         </div>
 
         <div className="grid gap-5 md:grid-cols-3">
-
           <input
             type="number"
             name="stock"
@@ -283,7 +218,7 @@ export default function AddProductPage() {
           <input
             type="number"
             name="rating"
-            placeholder="Rating"
+            placeholder="Rating (Max 5)"
             value={form.rating}
             onChange={handleChange}
             className="w-full rounded-lg border p-3"
@@ -300,13 +235,12 @@ export default function AddProductPage() {
             onChange={handleChange}
             className="w-full rounded-lg border p-3"
           />
-
         </div>
 
         <input
           type="text"
           name="sku"
-          placeholder="SKU"
+          placeholder="SKU (Optional)"
           value={form.sku}
           onChange={handleChange}
           className="w-full rounded-lg border p-3"
@@ -322,11 +256,7 @@ export default function AddProductPage() {
         />
 
         <div className="space-y-3">
-
-          <label className="font-semibold text-gray-700">
-            Product Image
-          </label>
-
+          <label className="font-semibold text-gray-700">Product Image</label>
           <ImageUploader
             value={form.image}
             onChange={(url) =>
@@ -336,31 +266,21 @@ export default function AddProductPage() {
               }))
             }
           />
-
         </div>
 
         {form.image && (
-
           <div className="space-y-3">
-
-            <h3 className="text-lg font-semibold">
-              Uploaded Image
-            </h3>
-
+            <h3 className="text-lg font-semibold">Uploaded Image</h3>
             <img
               src={form.image}
               alt="Product"
               className="h-56 w-56 rounded-xl border object-cover"
             />
-
           </div>
-
         )}
 
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-
           <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-4">
-
             <input
               type="checkbox"
               name="featured"
@@ -368,23 +288,13 @@ export default function AddProductPage() {
               onChange={handleChange}
               className="h-5 w-5"
             />
-
             <div>
-
-              <p className="font-semibold">
-                Featured Product
-              </p>
-
-              <p className="text-sm text-gray-500">
-                Show on Homepage
-              </p>
-
+              <p className="font-semibold">Featured Product</p>
+              <p className="text-sm text-gray-500">Show on Homepage</p>
             </div>
-
           </label>
 
           <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-4">
-
             <input
               type="checkbox"
               name="bestSeller"
@@ -392,23 +302,13 @@ export default function AddProductPage() {
               onChange={handleChange}
               className="h-5 w-5"
             />
-
             <div>
-
-              <p className="font-semibold">
-                Best Seller
-              </p>
-
-              <p className="text-sm text-gray-500">
-                Mark as Best Seller
-              </p>
-
+              <p className="font-semibold">Best Seller</p>
+              <p className="text-sm text-gray-500">Mark as Best Seller</p>
             </div>
-
           </label>
 
           <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-4">
-
             <input
               type="checkbox"
               name="newArrival"
@@ -416,22 +316,13 @@ export default function AddProductPage() {
               onChange={handleChange}
               className="h-5 w-5"
             />
-
             <div>
-
-              <p className="font-semibold">
-                New Arrival
-              </p>
-
-              <p className="text-sm text-gray-500">
-                Highlight as New
-              </p>
-
+              <p className="font-semibold">New Arrival</p>
+              <p className="text-sm text-gray-500">Highlight as New</p>
             </div>
-
           </label>
-                    <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-4">
 
+          <label className="flex cursor-pointer items-center gap-3 rounded-lg border p-4">
             <input
               type="checkbox"
               name="active"
@@ -439,39 +330,23 @@ export default function AddProductPage() {
               onChange={handleChange}
               className="h-5 w-5"
             />
-
             <div>
-
-              <p className="font-semibold">
-                Active Product
-              </p>
-
-              <p className="text-sm text-gray-500">
-                Visible to Customers
-              </p>
-
+              <p className="font-semibold">Active Product</p>
+              <p className="text-sm text-gray-500">Visible to Customers</p>
             </div>
-
           </label>
-
         </div>
 
         <div className="border-t pt-6">
-
           <button
             type="submit"
             disabled={loading}
             className="w-full rounded-lg bg-green-700 py-3 font-bold text-white transition hover:bg-green-800 disabled:bg-gray-400"
           >
-            {loading
-              ? "Saving Product..."
-              : "Save Product"}
+            {loading ? "Saving Product..." : "Save Product"}
           </button>
-
         </div>
-
       </form>
-
     </div>
   );
 }

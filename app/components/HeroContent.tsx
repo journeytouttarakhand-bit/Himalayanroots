@@ -1,15 +1,15 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
+import Image from "next/image";
 
 type Props = {
-  heroImage: string;
-  heroTitle: string;
-  heroSubtitle: string;
-  heroButtonText: string;
-  heroButtonLink: string;
-  whatsappLink: string;
+  heroImage?: string;
+  heroTitle?: string;
+  heroSubtitle?: string;
+  heroButtonText?: string;
+  heroButtonLink?: string;
+  whatsappLink?: string;
 };
 
 export default function HeroContent({
@@ -20,105 +20,104 @@ export default function HeroContent({
   heroButtonLink,
   whatsappLink,
 }: Props) {
+  // Dynamic Fallbacks from CMS
+  const displayTitle = heroTitle || "Authentic Himalayan Products";
+  const displaySubtitle =
+    heroSubtitle || "Directly sourced from the farmers of Uttarakhand.";
+  const displayBtnText = heroButtonText || "Shop Now";
+  const displayBtnLink = heroButtonLink || "/products";
+  const displayImage = heroImage || "/hero-bg.jpg";
+
   return (
-    <section
-      className="relative flex h-[90vh] items-center bg-cover bg-center"
-      style={{
-        backgroundImage: `url(${heroImage})`,
-      }}
-    >
-      {/* Overlay */}
+    <section className="relative w-full overflow-hidden bg-white py-12 lg:py-20">
+      <div className="relative mx-auto max-w-7xl px-6">
+        <div className="grid lg:grid-cols-2 gap-12 items-center">
+          
+          {/* Left Side Content */}
+          <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            
+            {/* Organic Badge */}
+            <div className="inline-flex items-center gap-3 rounded-full bg-emerald-50 border border-emerald-200 px-5 py-2 w-fit shadow-sm transition-transform hover:scale-105">
+              <span className="text-xl">🌿</span>
+              <span className="font-semibold text-emerald-800 text-sm">
+                100% Pure & Organic
+              </span>
+            </div>
 
-      <div className="absolute inset-0 bg-black/55"></div>
+            {/* Dynamic Heading & Subtitle */}
+            <div className="space-y-4">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-emerald-950 leading-tight tracking-tight">
+                {displayTitle}
+              </h1>
 
-      {/* Content */}
+              <p className="text-lg lg:text-xl text-gray-600 leading-relaxed max-w-lg">
+                {displaySubtitle}
+              </p>
+            </div>
 
-      <div className="relative mx-auto w-full max-w-7xl px-6">
+            {/* CTA Buttons */}
+            <div className="flex flex-wrap items-center gap-4 pt-2">
+              <Link
+                href={displayBtnLink}
+                className="px-8 py-4 font-bold text-lg rounded-xl bg-emerald-800 text-white shadow-lg hover:bg-emerald-900 transition-all duration-300 active:scale-95"
+              >
+                <span className="flex items-center gap-2">
+                  {displayBtnText} ✨
+                </span>
+              </Link>
 
-        <motion.div
-          initial={{
-            opacity: 0,
-            y: 80,
-          }}
-          animate={{
-            opacity: 1,
-            y: 0,
-          }}
-          transition={{
-            duration: 1,
-          }}
-          className="max-w-2xl"
-        >
-          <span className="rounded-full bg-green-700 px-4 py-2 text-white">
-            🌿 Pure • Natural • Organic
-          </span>
+              <Link
+                href="/about"
+                className="px-8 py-4 font-bold text-lg rounded-xl bg-amber-100 text-amber-900 shadow hover:bg-amber-200 transition-all duration-300 active:scale-95"
+              >
+                Learn More
+              </Link>
 
-          <h1 className="mt-8 text-6xl font-bold leading-tight text-white">
-            {heroTitle}
-          </h1>
+              {whatsappLink && (
+                <a
+                  href={whatsappLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-bold text-emerald-800 hover:underline px-4 py-2 flex items-center gap-2"
+                >
+                  💬 WhatsApp Order
+                </a>
+              )}
+            </div>
 
-          <p className="mt-6 text-xl leading-8 text-white">
-            {heroSubtitle}
-          </p>
-
-          <div className="mt-10 flex flex-wrap gap-5">
-
-            <Link
-              href={heroButtonLink}
-              className="rounded-full bg-green-700 px-8 py-4 font-bold text-white transition hover:bg-green-800"
-            >
-              {heroButtonText}
-            </Link>
-
-            <a
-              href={whatsappLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-full border-2 border-white px-8 py-4 font-bold text-white transition hover:bg-white hover:text-black"
-            >
-              Order on WhatsApp
-            </a>
-
+            {/* Key Statistics */}
+            <div className="grid grid-cols-3 gap-6 pt-8 border-t border-gray-200">
+              <div className="space-y-1">
+                <p className="text-3xl font-extrabold text-emerald-900">500+</p>
+                <p className="text-gray-500 text-sm font-medium">Happy Customers</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-3xl font-extrabold text-emerald-900">100%</p>
+                <p className="text-gray-500 text-sm font-medium">Natural Products</p>
+              </div>
+              <div className="space-y-1">
+                <p className="text-3xl font-extrabold text-emerald-900">50+</p>
+                <p className="text-gray-500 text-sm font-medium">Local Farmers</p>
+              </div>
+            </div>
           </div>
 
-          <div className="mt-14 grid grid-cols-3 gap-8 text-white">
-
-            <div>
-              <h2 className="text-4xl font-bold">
-                500+
-              </h2>
-
-              <p>
-                Happy Customers
-              </p>
+          {/* Right Side Image Container */}
+          <div className="relative h-full animate-in fade-in duration-1000">
+            <div className="relative w-full aspect-square rounded-3xl overflow-hidden shadow-2xl border border-gray-100 bg-gray-50">
+              <Image
+                src={displayImage}
+                alt={displayTitle}
+                fill
+                priority
+                className="object-cover transition-transform duration-700 hover:scale-105"
+                sizes="(max-width: 1024px) 100vw, 50vw"
+              />
             </div>
-
-            <div>
-              <h2 className="text-4xl font-bold">
-                100%
-              </h2>
-
-              <p>
-                Natural Products
-              </p>
-            </div>
-
-            <div>
-              <h2 className="text-4xl font-bold">
-                50+
-              </h2>
-
-              <p>
-                Local Farmers
-              </p>
-            </div>
-
           </div>
 
-        </motion.div>
-
+        </div>
       </div>
-
     </section>
   );
 }
