@@ -1,6 +1,6 @@
 import { unstable_noStore as noStore } from "next/cache";
 import connectToDatabase from "@/lib/mongodb";
-import SiteSettings from "@/database/SiteSettings";
+import SiteSettings from "@/database/SiteSettings"; // 👈 Exact correct path according to your structure
 
 export default async function getSiteSettings() {
   // Disable Next.js data caching so every request fetches fresh DB values
@@ -30,7 +30,7 @@ export default async function getSiteSettings() {
       favicon: "/favicon.ico",
       primaryColor: "#166534",
       secondaryColor: "#65A30D",
-      fontFamily: "sans-serif",
+      textColor: "#1f2937",
 
       // Hero
       heroTitle: "Authentic Himalayan Products",
@@ -38,6 +38,12 @@ export default async function getSiteSettings() {
       heroButtonText: "Shop Now",
       heroButtonLink: "/products",
       heroImage: "/images/hero-bg.jpg",
+
+      // 🌟 About Us Section Fallbacks
+      aboutTitle: "About Himalayan Roots",
+      aboutSubtitle: "Pure & Natural Products Directly from Uttarakhand",
+      aboutDescription: "Himalayan Roots brings authentic and natural products directly from the farmers of Uttarakhand to homes across India.",
+      aboutImage: "",
 
       // Announcement Bar
       announcementEnabled: true,
@@ -61,6 +67,8 @@ export default async function getSiteSettings() {
       whatsappNumber: "",
 
       // Footer
+      footerBackground: "#0f0e47",
+      footerTextColor: "#ffffff",
       footerAboutText: "Bringing authentic Himalayan products directly from Uttarakhand farmers to every home in India.",
       copyrightText: "© Himalayan Roots. All Rights Reserved.",
 

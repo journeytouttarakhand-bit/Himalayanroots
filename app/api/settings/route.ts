@@ -7,10 +7,11 @@ import SiteSettings from "@/database/SiteSettings";
 export async function GET() {
   try {
     await connectToDatabase();
-    let settings = await SiteSettings.findOne();
+    let settings = await SiteSettings.findOne().lean();
 
     if (!settings) {
-      settings = await SiteSettings.create({});
+      const newSettings = await SiteSettings.create({});
+      settings = newSettings.toObject();
     }
 
     return NextResponse.json({ success: true, settings });
@@ -34,7 +35,7 @@ export async function PUT(req: Request) {
       settings = new SiteSettings({});
     }
 
-    // Dynamic update for provided keys
+    // Dynamic update for all provided body keys (Includes aboutTitle, aboutDescription, aboutImage, etc.)
     Object.keys(body).forEach((key) => {
       if (body[key] !== undefined) {
         (settings as any)[key] = body[key];
@@ -43,8 +44,9 @@ export async function PUT(req: Request) {
 
     await settings.save();
 
-    // Instant Cache Invalidation: Isse CMS ke colors aur text changes turant live reflect honge
+    // 🌟 Cache Invalidation Fix: Clear all cached pages so changes reflect instantly
     revalidatePath("/", "layout");
+    revalidatePath("/about", "page");
 
     return NextResponse.json({
       success: true,

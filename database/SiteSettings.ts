@@ -22,6 +22,12 @@ export interface ISiteSettings extends Document {
   heroButtonLink?: string;
   heroImage?: string;
 
+  // About Us Section
+  aboutTitle?: string;
+  aboutSubtitle?: string;
+  aboutDescription?: string;
+  aboutImage?: string;
+
   // Contact
   contactEmail?: string;
   contactPhone?: string;
@@ -56,7 +62,7 @@ export interface ISiteSettings extends Document {
   faqs?: IFAQ[];
 }
 
-const SiteSettingsSchema = new Schema<ISiteSettings>(
+const SiteSettingsSchema = new Schema(
   {
     siteName: { type: String, default: "Himalayan Roots" },
     tagline: { type: String, default: "Pure & Organic Products" },
@@ -71,6 +77,12 @@ const SiteSettingsSchema = new Schema<ISiteSettings>(
     heroButtonText: { type: String, default: "" },
     heroButtonLink: { type: String, default: "" },
     heroImage: { type: String, default: "" },
+
+    // About Us Section
+    aboutTitle: { type: String, default: "" },
+    aboutSubtitle: { type: String, default: "" },
+    aboutDescription: { type: String, default: "" },
+    aboutImage: { type: String, default: "" },
 
     contactEmail: { type: String, default: "" },
     contactPhone: { type: String, default: "" },
@@ -104,8 +116,14 @@ const SiteSettingsSchema = new Schema<ISiteSettings>(
       },
     ],
   },
-  { timestamps: true }
+  { 
+    timestamps: true,
+    strict: false
+  }
 );
 
-export default mongoose.models.SiteSettings ||
+const SiteSettings =
+  mongoose.models.SiteSettings ||
   mongoose.model<ISiteSettings>("SiteSettings", SiteSettingsSchema);
+
+export default SiteSettings;

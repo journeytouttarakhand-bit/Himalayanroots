@@ -93,7 +93,7 @@ export default function AppearancePage() {
         setHeroTitle(data.settings.heroTitle || "");
         setHeroSubtitle(data.settings.heroSubtitle || "");
 
-        // 🌟 Load About Settings
+        // 🌟 Fixed: Properly mapped About Settings from API
         setAboutImage(data.settings.aboutImage || "");
         setAboutTitle(data.settings.aboutTitle || "");
         setAboutDescription(data.settings.aboutDescription || "");
@@ -221,7 +221,7 @@ export default function AppearancePage() {
       <div className="flex items-center justify-between">
         <button
           onClick={() => router.back()}
-          className="inline-flex items-center gap-2 rounded-lg border bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50"
+          className="inline-flex items-center gap-2 rounded-lg border bg-white px-4 py-2 text-sm font-semibold text-gray-700 shadow-sm transition hover:bg-gray-50 cursor-pointer"
         >
           ← Back
         </button>
@@ -243,7 +243,7 @@ export default function AppearancePage() {
               key={index}
               type="button"
               onClick={() => applyThemePreset(preset)}
-              className="group flex flex-col justify-between rounded-xl border p-4 text-left transition hover:border-green-600 hover:shadow-md"
+              className="group flex flex-col justify-between rounded-xl border p-4 text-left transition hover:border-green-600 hover:shadow-md cursor-pointer"
             >
               <span className="font-semibold text-sm text-gray-800">{preset.name}</span>
               <div className="mt-3 flex gap-2">
@@ -306,7 +306,7 @@ export default function AppearancePage() {
         </div>
       </div>
 
-      {/* 🌟 NEW: ABOUT SECTION IMAGE & CONTENT SETTINGS */}
+      {/* 🌟 ABOUT SECTION IMAGE & CONTENT SETTINGS */}
       <div className="rounded-2xl border bg-white p-6 shadow-sm space-y-6">
         <h2 className="text-lg font-bold text-gray-900">📖 About Us Section Settings</h2>
         
