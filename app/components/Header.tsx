@@ -79,6 +79,10 @@ export default async function Header() {
           <Link href="/about" className="font-semibold transition hover:text-primary">
             About
           </Link>
+          {/* 🌟 Blog Link Added */}
+          <Link href="/blog" className="font-semibold transition hover:text-primary">
+            Blog
+          </Link>
           <Link href="/contact" className="font-semibold transition hover:text-primary">
             Contact
           </Link>
@@ -116,6 +120,10 @@ export default async function Header() {
           </Link>
           <Link href="/about" className="transition hover:text-primary">
             About
+          </Link>
+          {/* 🌟 Mobile Blog Link Added */}
+          <Link href="/blog" className="transition hover:text-primary">
+            Blog
           </Link>
           <Link href="/contact" className="transition hover:text-primary">
             Contact

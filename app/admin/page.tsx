@@ -1,126 +1,148 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { Lock, User, Eye, EyeOff, ShieldCheck } from "lucide-react";
 
 export default function AdminLoginPage() {
-  const router = useRouter();
-
   const [username, setUsername] = useState("");
-
   const [password, setPassword] = useState("");
-
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
-  async function handleLogin(
-    e: React.FormEvent
-  ) {
+  async function handleLogin(e: React.FormEvent) {
     e.preventDefault();
-
     setLoading(true);
+    setErrorMsg("");
 
     try {
-      const res = await fetch(
-        "/api/admin/login",
-        {
-          method: "POST",
-
-          headers: {
-            "Content-Type":
-              "application/json",
-          },
-
-          body: JSON.stringify({
-            username,
-            password,
-          }),
-        }
-      );
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username,
+          password,
+        }),
+      });
 
       const data = await res.json();
 
       if (!data.success) {
-        alert(data.message);
-
+        setErrorMsg(data.message || "Invalid credentials");
         setLoading(false);
-
         return;
       }
 
-      router.push("/admin/dashboard");
-
-      router.refresh();
-
+      // Hard redirect to clear client cache and enforce server layout checks
+      window.location.href = "/admin/dashboard";
     } catch (error) {
       console.error(error);
-
-      alert("Login Failed");
+      setErrorMsg("Something went wrong. Please try again.");
+      setLoading(false);
     }
-
-    setLoading(false);
   }
 
   return (
-    <div className="min-h-screen bg-green-50 flex items-center justify-center px-6">
-
-      <div className="bg-white w-full max-w-md rounded-2xl shadow-xl p-8">
-
-        <div className="text-center">
-
-          <div className="text-6xl">
-            🌿
+    <div className="min-h-screen bg-slate-100 flex items-center justify-center px-4 sm:px-6">
+      <div className="bg-white w-full max-w-md rounded-3xl shadow-xl border border-gray-100 p-8 space-y-6">
+        
+        {/* Header Branding */}
+        <div className="text-center space-y-2">
+          <div className="inline-flex items-center justify-center h-16 w-16 rounded-2xl bg-emerald-50 text-emerald-800 shadow-sm border border-emerald-100 mb-2">
+            <ShieldCheck className="h-8 w-8" strokeWidth={2.2} />
           </div>
 
-          <h1 className="text-3xl font-bold mt-4 text-green-900">
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-green-950 tracking-tight">
             Himalayan Roots
           </h1>
 
-          <p className="text-gray-500 mt-2">
-            Admin Login
+          <p className="text-sm font-semibold text-emerald-700 uppercase tracking-wider">
+            Admin Portal Access
           </p>
-
         </div>
 
-        <form
-          onSubmit={handleLogin}
-          className="mt-8 space-y-5"
-        >
+        {/* Error Alert Box */}
+        {errorMsg && (
+          <div className="bg-red-50 border border-red-200 text-red-700 text-xs sm:text-sm font-semibold p-3.5 rounded-xl text-center">
+            ⚠️ {errorMsg}
+          </div>
+        )}
 
-          <input
-            type="text"
-            placeholder="Username"
-            value={username}
-            onChange={(e) =>
-              setUsername(e.target.value)
-            }
-            className="w-full border rounded-lg p-3"
-            required
-          />
+        {/* Login Form */}
+        <form onSubmit={handleLogin} className="space-y-4">
+          
+          {/* Username Input */}
+          <div>
+            <label className="block text-xs font-bold text-gray-700 uppercase mb-1.5">
+              Username
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                <User className="h-5 w-5" />
+              </div>
+              <input
+                type="text"
+                placeholder="Enter admin username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-10 pr-4 py-3 text-sm text-gray-900 focus:bg-white focus:border-emerald-700 focus:ring-2 focus:ring-emerald-700/20 focus:outline-none transition"
+                required
+              />
+            </div>
+          </div>
 
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) =>
-              setPassword(e.target.value)
-            }
-            className="w-full border rounded-lg p-3"
-            required
-          />
+          {/* Password Input */}
+          <div>
+            <label className="block text-xs font-bold text-gray-700 uppercase mb-1.5">
+              Password
+            </label>
+            <div className="relative">
+              <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                <Lock className="h-5 w-5" />
+              </div>
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-10 pr-10 py-3 text-sm text-gray-900 focus:bg-white focus:border-emerald-700 focus:ring-2 focus:ring-emerald-700/20 focus:outline-none transition"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-gray-600 cursor-pointer"
+              >
+                {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+              </button>
+            </div>
+          </div>
 
-          <button
-            disabled={loading}
-            className="w-full bg-green-700 hover:bg-green-800 text-white py-3 rounded-lg font-bold"
-          >
-            {loading
-              ? "Signing In..."
-              : "Login"}
-          </button>
-
+          {/* Submit Button */}
+          <div className="pt-2">
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-emerald-800 hover:bg-emerald-900 active:scale-98 text-white py-3.5 rounded-xl font-bold shadow-md shadow-emerald-900/10 transition duration-200 cursor-pointer flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <span>Signing In...</span>
+              ) : (
+                <span>Access Dashboard →</span>
+              )}
+            </button>
+          </div>
         </form>
 
-      </div>
+        <div className="text-center pt-2">
+          <p className="text-xs text-gray-400">
+            Protected area • Authorized Himalayan Roots admins only
+          </p>
+        </div>
 
+      </div>
     </div>
   );
 }

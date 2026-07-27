@@ -1,21 +1,24 @@
 import Link from "next/link";
 import getSiteSettings from "@/lib/getSiteSettings";
+
 import HeroContent from "./components/HeroContent";
 import Features from "./components/Features";
 import Products from "./components/Products";
 import About from "./components/About";
 import Testimonials from "./components/Testimonials";
+import BlogSection from "./components/BlogSection";
 import WhatsAppButton from "./components/WhatsAppButton";
+
 import { 
   Sparkles, 
   ArrowRight, 
   ShieldCheck, 
   HeartHandshake,
-  Flame,      // For Honey / Sweet harvest
-  Cookie,     // For Pure Ghee
-  Wheat,      // For Pulses & Grains
+  Flame,          // For Honey
+  Cookie,         // For Pure Ghee
+  Wheat,          // For Pulses & Grains
   FlameKindling, // For Spices
-  Trees       // For Organic Grains
+  Trees           // For Organic Grains
 } from "lucide-react";
 
 export default async function Home() {
@@ -66,7 +69,7 @@ export default async function Home() {
       {/* 3. Dynamic "Why Choose Us" Features Grid */}
       <Features />
 
-      {/* 4. Category Quick Nav Banner (Updated without Tea & with Lucide Icons) */}
+      {/* 4. Category Quick Nav Banner */}
       <section className="py-12 bg-white border-y border-gray-100">
         <div className="mx-auto max-w-7xl px-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
@@ -124,7 +127,10 @@ export default async function Home() {
         <About />
       </section>
 
-      {/* 7. Social Proof & Customer Reviews */}
+      {/* 🌟 7. Himalayan Journal / Blog Section */}
+      <BlogSection />
+
+      {/* 8. Social Proof & Customer Reviews */}
       <section className="py-16 bg-slate-50">
         <Testimonials />
       </section>

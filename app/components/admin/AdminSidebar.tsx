@@ -18,7 +18,6 @@ import {
 
 export default function AdminSidebar() {
   const pathname = usePathname();
-
   const router = useRouter();
 
   const menu = [
@@ -27,37 +26,31 @@ export default function AdminSidebar() {
       href: "/admin/dashboard",
       icon: LayoutDashboard,
     },
-
     {
       title: "Products",
       href: "/admin/products",
       icon: Package,
     },
-
     {
       title: "Categories",
       href: "/admin/categories",
       icon: FolderTree,
     },
-
     {
       title: "Orders",
       href: "/admin/orders",
       icon: ShoppingCart,
     },
-
     {
       title: "Customers",
       href: "/admin/customers",
       icon: Users,
     },
-
     {
       title: "Website CMS Settings",
       href: "/admin/cms",
       icon: Settings,
     },
-
     {
       title: "Reports",
       href: "/admin/reports",
@@ -71,53 +64,36 @@ export default function AdminSidebar() {
         method: "POST",
       });
 
-      router.push("/admin/login");
-
-      router.refresh();
-
+      // Direct redirect to /admin login route
+      window.location.href = "/admin";
     } catch (error) {
-      console.error(error);
-
-      alert("Logout Failed");
+      console.error("Logout failed:", error);
+      // Fallback redirect
+      window.location.href = "/admin";
     }
   }
 
   return (
     <aside className="flex h-screen w-72 flex-col bg-green-900 text-white shadow-2xl">
-
+      {/* Header / Logo */}
       <div className="border-b border-green-800 p-6">
-
         <div className="flex items-center gap-3">
-
           <div className="rounded-xl bg-white p-2 text-green-800">
-
             <Mountain size={30} />
-
           </div>
-
           <div>
-
-            <h2 className="text-2xl font-bold">
-              Himalayan Roots
-            </h2>
-
-            <p className="text-sm text-green-200">
-              Admin Panel
-            </p>
-
+            <h2 className="text-2xl font-bold">Himalayan Roots</h2>
+            <p className="text-sm text-green-200">Admin Panel</p>
           </div>
-
         </div>
-
       </div>
 
+      {/* Navigation Menu */}
       <nav className="flex-1 space-y-2 overflow-y-auto p-5">
-                {menu.map((item) => {
+        {menu.map((item) => {
           const Icon = item.icon;
-
           const active =
-            pathname === item.href ||
-            pathname.startsWith(item.href + "/");
+            pathname === item.href || pathname.startsWith(item.href + "/");
 
           return (
             <Link
@@ -130,44 +106,31 @@ export default function AdminSidebar() {
               }`}
             >
               <div className="flex items-center gap-4">
-
                 <Icon size={21} />
-
-                <span className="font-medium">
-                  {item.title}
-                </span>
-
+                <span className="font-medium">{item.title}</span>
               </div>
 
               <ChevronRight
                 size={18}
                 className={`transition-transform duration-300 ${
-                  active
-                    ? "translate-x-1"
-                    : "group-hover:translate-x-1"
+                  active ? "translate-x-1" : "group-hover:translate-x-1"
                 }`}
               />
-
             </Link>
           );
         })}
-
       </nav>
 
+      {/* Logout Button */}
       <div className="border-t border-green-800 p-5">
-
         <button
           onClick={handleLogout}
-          className="flex w-full items-center justify-center gap-3 rounded-xl bg-red-600 px-4 py-3 font-semibold text-white transition hover:bg-red-700"
+          className="flex w-full items-center justify-center gap-3 rounded-xl bg-red-600 px-4 py-3 font-semibold text-white transition hover:bg-red-700 cursor-pointer"
         >
-
           <LogOut size={20} />
-
           Logout
-
         </button>
-
       </div>
-          </aside>
+    </aside>
   );
 }

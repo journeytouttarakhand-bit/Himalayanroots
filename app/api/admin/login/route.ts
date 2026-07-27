@@ -4,12 +4,14 @@ export async function POST(req: NextRequest) {
   try {
     const { username, password } = await req.json();
 
-    if (
-      username === process.env.ADMIN_USERNAME &&
-      password === process.env.ADMIN_PASSWORD
-    ) {
+    // Environment variables with fallback defaults
+    const validUsername = process.env.ADMIN_USERNAME || "admin@himalayanroots.in";
+    const validPassword = process.env.ADMIN_PASSWORD || "123456";
+
+    if (username === validUsername && password === validPassword) {
       const response = NextResponse.json({
         success: true,
+        message: "Login successful",
       });
 
       response.cookies.set({
@@ -19,7 +21,7 @@ export async function POST(req: NextRequest) {
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
         path: "/",
-        maxAge: 60 * 60 * 24,
+        maxAge: 60 * 60 * 24, // 24 hours
       });
 
       return response;
@@ -35,7 +37,7 @@ export async function POST(req: NextRequest) {
       }
     );
   } catch (error) {
-    console.error(error);
+    console.error("Login API Error:", error);
 
     return NextResponse.json(
       {

@@ -13,6 +13,7 @@ import {
   Search,
   CircleHelp,
   Settings,
+  BookOpen,
 } from "lucide-react";
 
 export default function CMSDashboardPage() {
@@ -24,6 +25,15 @@ export default function CMSDashboardPage() {
       />
 
       <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        {/* 🌟 Blog Manager Card (Updated href to /admin/cms/blog) */}
+        <CMSCard
+          title="Blog Manager"
+          description="Create, edit, delete blog articles and upload feature images for mountain stories and recipes."
+          href="/admin/cms/blog"
+          color="hover:border-emerald-600"
+          icon={<BookOpen className="h-8 w-8 text-emerald-700" strokeWidth={2} />}
+        />
+
         <CMSCard
           title="Appearance"
           description="Manage logo, favicon, theme colors, fonts, border radius and complete website branding."
