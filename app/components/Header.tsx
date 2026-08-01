@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   Search,
   Heart,
@@ -24,6 +25,8 @@ type UserType = {
 export default function Header() {
   const [user, setUser] = useState<UserType | null>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
     checkAuth();
@@ -52,6 +55,13 @@ export default function Header() {
       console.error("Logout error:", error);
     }
   }
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
 
   return (
     <header className="w-full border-b bg-white sticky top-0 z-50 shadow-sm">
@@ -101,15 +111,25 @@ export default function Header() {
           </Link>
         </nav>
 
-        {/* Search Bar */}
-        <div className="hidden lg:flex items-center rounded-full border border-gray-200 bg-gray-50 px-4 py-2 w-72 focus-within:border-emerald-600 focus-within:bg-white transition-all">
+        {/* Search Bar - Working Form Integration */}
+        <form
+          onSubmit={handleSearchSubmit}
+          className="hidden lg:flex items-center rounded-full border border-gray-200 bg-gray-50 px-4 py-2 w-72 focus-within:border-emerald-600 focus-within:bg-white transition-all"
+        >
           <input
             type="text"
             placeholder="Search products..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-transparent text-sm text-gray-800 focus:outline-none"
           />
-          <Search size={18} className="text-gray-400" />
-        </div>
+          <button
+            type="submit"
+            className="text-gray-400 hover:text-emerald-800 cursor-pointer"
+          >
+            <Search size={18} />
+          </button>
+        </form>
 
         {/* Right Side Icons & Actions */}
         <div className="flex items-center gap-4">
@@ -151,8 +171,15 @@ export default function Header() {
                     user.name.charAt(0).toUpperCase()
                   )}
                 </div>
-                <span className="max-w-[100px] truncate capitalize">{user.name}</span>
-                <ChevronDown size={14} className={`text-emerald-800 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
+                <span className="max-w-[100px] truncate capitalize">
+                  {user.name}
+                </span>
+                <ChevronDown
+                  size={14}
+                  className={`text-emerald-800 transition-transform ${
+                    dropdownOpen ? "rotate-180" : ""
+                  }`}
+                />
               </button>
 
               {/* Dropdown Menu */}
@@ -160,9 +187,15 @@ export default function Header() {
                 <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-gray-100 bg-white p-2 shadow-xl z-50 divide-y divide-gray-100">
                   {/* User Account Info */}
                   <div className="px-3 py-2.5">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">YOUR ACCOUNT</p>
-                    <p className="text-sm font-bold text-gray-900 truncate mt-0.5">{user.name}</p>
-                    <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                      YOUR ACCOUNT
+                    </p>
+                    <p className="text-sm font-bold text-gray-900 truncate mt-0.5">
+                      {user.name}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">
+                      {user.email}
+                    </p>
                   </div>
 
                   {/* Clean Selected Options */}
