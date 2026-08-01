@@ -1,10 +1,24 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 
-import { products } from "@/data/products";
 import { useCart } from "@/app/context/CartContext";
+
+type Product = {
+  _id: string;
+  name: string;
+  slug: string;
+  category: string;
+  description: string;
+  price: number;
+  stock: number;
+  image: string;
+  rating: number;
+  featured: boolean;
+  active: boolean;
+};
 
 type Props = {
   currentSlug: string;
@@ -15,9 +29,38 @@ export default function RelatedProducts({
 }: Props) {
   const { addToCart } = useCart();
 
+  const [products, setProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    async function loadProducts() {
+      try {
+        const res = await fetch("/api/all-products", {
+          cache: "no-store",
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          setProducts(data.products);
+        }
+      } catch (error) {
+        console.error("Related Products Error:", error);
+      }
+    }
+
+    loadProducts();
+  }, []);
+
   const relatedProducts = products
-    .filter((product) => product.slug !== currentSlug)
+    .filter(
+      (product) =>
+        product.slug !== currentSlug && product.active
+    )
     .slice(0, 3);
+
+  if (relatedProducts.length === 0) {
+    return null;
+  }
 
   return (
     <section className="mt-24">
@@ -28,7 +71,7 @@ export default function RelatedProducts({
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
         {relatedProducts.map((product) => (
           <div
-            key={product.id}
+            key={product._id}
             className="bg-white rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition duration-300"
           >
             <Link href={`/products/${product.slug}`}>
@@ -66,12 +109,12 @@ export default function RelatedProducts({
                 <button
                   onClick={() =>
                     addToCart({
-                      id: product.id,
-                      slug: product.slug,
-                      name: product.name,
-                      price: product.price,
-                      image: product.image,
-                    })
+  id: product._id,
+  slug: product.slug,
+  name: product.name,
+  price: product.price,
+  image: product.image,
+})
                   }
                   className="flex-1 bg-green-700 hover:bg-green-800 text-white py-3 rounded-xl font-semibold transition"
                 >

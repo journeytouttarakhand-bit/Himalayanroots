@@ -1,211 +1,267 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Menu, X, ShoppingCart, Heart } from "lucide-react";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import {
+  Search,
+  Heart,
+  ShoppingBag,
+  User,
+  LogOut,
+  Package,
+  MapPin,
+  ChevronDown,
+} from "lucide-react";
 
-import { useCart } from "@/app/context/CartContext";
-import { useWishlist } from "@/app/context/WishlistContext";
+type UserType = {
+  _id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+};
 
 export default function Header() {
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [user, setUser] = useState<UserType | null>(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const router = useRouter();
 
-  const { cart } = useCart();
-  const { wishlist } = useWishlist();
+  useEffect(() => {
+    checkAuth();
+  }, []);
 
-  const totalItems = cart.reduce(
-    (total, item) => total + item.quantity,
-    0
-  );
+  async function checkAuth() {
+    try {
+      const res = await fetch("/api/auth/me", { cache: "no-store" });
+      const data = await res.json();
+      if (data.success && data.user) {
+        setUser(data.user);
+      } else {
+        setUser(null);
+      }
+    } catch (error) {
+      console.error("Auth check failed:", error);
+    }
+  }
 
-  const wishlistCount = wishlist.length;
+  async function handleLogout() {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      setUser(null);
+      window.location.href = "/login";
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  }
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/products?search=${encodeURIComponent(searchQuery.trim())}`);
+    }
+  };
 
   return (
-    <>
-      {/* Top Bar */}
-      <div className="bg-green-900 text-white text-sm py-2 hidden md:block">
-        <div className="max-w-7xl mx-auto flex justify-center gap-8">
-          <span>🚚 Free Shipping Above ₹999</span>
-          <span>🌿 100% Natural Products</span>
-          <span>🏔️ Pure Taste of Uttarakhand</span>
-        </div>
+    <header className="w-full border-b bg-white sticky top-0 z-50 shadow-sm">
+      {/* Top Announcement Bar */}
+      <div className="bg-emerald-900 px-4 py-1.5 text-center text-xs font-medium text-white">
+        🚚 Free Shipping on Orders Above ₹999
       </div>
 
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur shadow-md">
-
-        <div className="max-w-7xl mx-auto flex items-center justify-between px-6 py-3">
-
-          {/* Logo */}
-          <Link href="/" className="flex items-center">
+      {/* Main Navigation Header */}
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-8">
+        {/* Logo Section */}
+        <Link href="/" className="flex items-center gap-3">
+          <div className="relative h-12 w-12 overflow-hidden">
             <Image
               src="/logo.png"
-              alt="Himalayan Roots"
-              width={130}
-              height={130}
-              priority
-              className="h-20 w-auto"
+              alt="Himalayan Roots Logo"
+              fill
+              className="object-contain"
             />
+          </div>
+          <div>
+            <span className="text-xl font-bold tracking-tight text-emerald-950 block">
+              Himalayan Roots
+            </span>
+            <span className="text-[10px] font-semibold text-emerald-700 tracking-wider uppercase block -mt-1">
+              Pure Taste of Uttarakhand
+            </span>
+          </div>
+        </Link>
+
+        {/* Navigation Links */}
+        <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-gray-700">
+          <Link href="/" className="hover:text-emerald-700 transition-colors">
+            Home
+          </Link>
+          <Link href="/products" className="hover:text-emerald-700 transition-colors">
+            Products
+          </Link>
+          <Link href="/about" className="hover:text-emerald-700 transition-colors">
+            About
+          </Link>
+          <Link href="/blog" className="hover:text-emerald-700 transition-colors">
+            Blog
+          </Link>
+          <Link href="/contact" className="hover:text-emerald-700 transition-colors">
+            Contact
+          </Link>
+        </nav>
+
+        {/* Search Bar - Working Form Integration */}
+        <form
+          onSubmit={handleSearchSubmit}
+          className="hidden lg:flex items-center rounded-full border border-gray-200 bg-gray-50 px-4 py-2 w-72 focus-within:border-emerald-600 focus-within:bg-white transition-all"
+        >
+          <input
+            type="text"
+            placeholder="Search products..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-transparent text-sm text-gray-800 focus:outline-none"
+          />
+          <button
+            type="submit"
+            className="text-gray-400 hover:text-emerald-800 cursor-pointer"
+          >
+            <Search size={18} />
+          </button>
+        </form>
+
+        {/* Right Side Icons & Actions */}
+        <div className="flex items-center gap-4">
+          {/* Wishlist */}
+          <Link
+            href="/wishlist"
+            className="p-2 text-gray-700 hover:text-emerald-700 transition-colors relative"
+            title="Wishlist"
+          >
+            <Heart size={22} />
           </Link>
 
-          {/* Desktop Menu */}
-          <nav className="hidden lg:flex items-center gap-8 font-semibold text-gray-700">
+          {/* Cart */}
+          <Link
+            href="/cart"
+            className="p-2 text-gray-700 hover:text-emerald-700 transition-colors relative"
+            title="Shopping Cart"
+          >
+            <ShoppingBag size={22} />
+          </Link>
 
-            <Link href="/" className="hover:text-green-700">
-              Home
-            </Link>
-
-            <Link href="/about" className="hover:text-green-700">
-              About
-            </Link>
-
-            <Link href="/products" className="hover:text-green-700">
-              Products
-            </Link>
-
-            <Link href="/why-us" className="hover:text-green-700">
-              Why Us
-            </Link>
-
-            <Link href="/farmers" className="hover:text-green-700">
-              Farmers
-            </Link>
-
-            <Link href="/blog" className="hover:text-green-700">
-              Blog
-            </Link>
-
-            <Link href="/contact" className="hover:text-green-700">
-              Contact
-            </Link>
-
-          </nav>
-
-          {/* Right Side */}
-          <div className="flex items-center gap-5">
-
-            {/* Wishlist */}
-            <Link
-              href="/wishlist"
-              className="relative flex items-center justify-center"
-            >
-              <Heart
-                size={28}
-                className="text-red-500"
-              />
-
-              {wishlistCount > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center">
-                  {wishlistCount}
+          {/* DYNAMIC USER SECTION */}
+          {user ? (
+            <div className="relative">
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="flex items-center gap-2 rounded-full bg-emerald-100 border border-emerald-300 px-3.5 py-1.5 text-xs font-bold text-emerald-900 hover:bg-emerald-200 transition-all cursor-pointer"
+              >
+                {/* Profile Avatar / First Letter Fallback */}
+                <div className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-emerald-800 text-white text-[11px] font-bold">
+                  {user.avatar ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                      src={user.avatar}
+                      alt={user.name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    user.name.charAt(0).toUpperCase()
+                  )}
+                </div>
+                <span className="max-w-[100px] truncate capitalize">
+                  {user.name}
                 </span>
-              )}
-            </Link>
+                <ChevronDown
+                  size={14}
+                  className={`text-emerald-800 transition-transform ${
+                    dropdownOpen ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
 
-            {/* Cart */}
+              {/* Dropdown Menu */}
+              {dropdownOpen && (
+                <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-gray-100 bg-white p-2 shadow-xl z-50 divide-y divide-gray-100">
+                  {/* User Account Info */}
+                  <div className="px-3 py-2.5">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
+                      YOUR ACCOUNT
+                    </p>
+                    <p className="text-sm font-bold text-gray-900 truncate mt-0.5">
+                      {user.name}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">
+                      {user.email}
+                    </p>
+                  </div>
+
+                  {/* Clean Selected Options */}
+                  <div className="py-1 space-y-0.5">
+                    <Link
+                      href="/profile"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-emerald-50 hover:text-emerald-800 transition"
+                    >
+                      <User size={16} className="text-gray-500" />
+                      My Profile
+                    </Link>
+
+                    <Link
+                      href="/profile?tab=orders"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-emerald-50 hover:text-emerald-800 transition"
+                    >
+                      <Package size={16} className="text-gray-500" />
+                      My Orders
+                    </Link>
+
+                    <Link
+                      href="/profile?tab=addresses"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-emerald-50 hover:text-emerald-800 transition"
+                    >
+                      <MapPin size={16} className="text-gray-500" />
+                      Saved Address
+                    </Link>
+
+                    <Link
+                      href="/wishlist"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-emerald-50 hover:text-emerald-800 transition"
+                    >
+                      <Heart size={16} className="text-gray-500" />
+                      Wishlist
+                    </Link>
+                  </div>
+
+                  {/* Logout Button */}
+                  <div className="pt-1">
+                    <button
+                      onClick={handleLogout}
+                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50 transition cursor-pointer"
+                    >
+                      <LogOut size={16} />
+                      Logout
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
             <Link
-              href="/cart"
-              className="relative flex items-center justify-center"
+              href="/login"
+              className="flex items-center gap-2 rounded-full border border-emerald-700 px-3.5 py-1.5 text-xs font-bold text-emerald-800 hover:bg-emerald-800 hover:text-white transition-all shadow-sm"
+              title="Customer Login / Register"
             >
-              <ShoppingCart
-                size={30}
-                className="text-green-700"
-              />
-
-              {totalItems > 0 && (
-                <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center">
-                  {totalItems}
-                </span>
-              )}
+              <User size={16} />
+              <span>Login</span>
             </Link>
-
-            {/* WhatsApp */}
-            <a
-              href="https://wa.me/917895943324"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hidden md:block bg-green-700 hover:bg-green-800 text-white px-6 py-3 rounded-full font-semibold"
-            >
-              Order Now
-            </a>
-
-            {/* Mobile Menu */}
-            <button
-              className="lg:hidden"
-              onClick={() => setMenuOpen(!menuOpen)}
-            >
-              {menuOpen ? <X size={30} /> : <Menu size={30} />}
-            </button>
-
-          </div>
-
+          )}
         </div>
-
-        {/* Mobile Menu */}
-        {menuOpen && (
-
-          <div className="lg:hidden bg-white border-t">
-
-            <nav className="flex flex-col gap-5 p-6 font-semibold">
-
-              <Link href="/" onClick={() => setMenuOpen(false)}>
-                Home
-              </Link>
-
-              <Link href="/about" onClick={() => setMenuOpen(false)}>
-                About
-              </Link>
-
-              <Link href="/products" onClick={() => setMenuOpen(false)}>
-                Products
-              </Link>
-
-              <Link href="/why-us" onClick={() => setMenuOpen(false)}>
-                Why Us
-              </Link>
-
-              <Link href="/farmers" onClick={() => setMenuOpen(false)}>
-                Farmers
-              </Link>
-
-              <Link href="/blog" onClick={() => setMenuOpen(false)}>
-                Blog
-              </Link>
-
-              <Link href="/contact" onClick={() => setMenuOpen(false)}>
-                Contact
-              </Link>
-
-              <Link
-                href="/wishlist"
-                onClick={() => setMenuOpen(false)}
-              >
-                ❤️ Wishlist ({wishlistCount})
-              </Link>
-
-              <Link
-                href="/cart"
-                onClick={() => setMenuOpen(false)}
-              >
-                🛒 Cart ({totalItems})
-              </Link>
-
-              <a
-                href="https://wa.me/917895943324"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-green-700 text-white text-center py-3 rounded-full"
-              >
-                Order on WhatsApp
-              </a>
-
-            </nav>
-
-          </div>
-
-        )}
-
-      </header>
-    </>
+      </div>
+    </header>
   );
 }

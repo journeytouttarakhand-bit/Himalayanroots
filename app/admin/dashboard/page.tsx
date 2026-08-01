@@ -1,223 +1,201 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import dynamic from "next/dynamic";
 
-type Order = {
-  _id: string;
-  customer: {
-    name: string;
-    phone: string;
-    address: string;
-    city: string;
-    state: string;
-    pincode: string;
+import DashboardHeader from "@/app/components/admin/DashboardHeader";
+import DashboardStats from "@/app/components/admin/DashboardStats";
+import RecentOrders from "@/app/components/admin/RecentOrders";
+import TopProducts from "@/app/components/admin/TopProducts";
+import LowStockProducts from "@/app/components/admin/LowStockProducts";
+import QuickActions from "@/app/components/admin/QuickActions";
+
+// Recharts Next.js Hydration & SSR issue se bachne ke liye dynamic import
+const SalesChart = dynamic(() => import("@/app/components/admin/SalesChart"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-80 items-center justify-center rounded-2xl bg-gray-50 text-gray-400 font-semibold border border-gray-200">
+      Loading Sales Analytics Chart...
+    </div>
+  ),
+});
+
+type DashboardData = {
+  success: boolean;
+
+  overview: {
+    totalRevenue: number;
+    todayRevenue: number;
+    averageOrderValue: number;
+    todayOrdersCount: number;
+    totalOrders: number;
+    totalProducts: number;
+    totalCategories: number;
+    totalCustomers: number;
+    pendingOrders: number;
+    deliveredOrders: number;
+    cancelledOrders: number;
+    activeCoupons: number;
+    totalReviews: number;
+    averageRating: number;
   };
-  totalAmount: number;
-  paymentStatus: string;
-  orderStatus: string;
-  createdAt: string;
+
+  monthlySales: {
+    month: number;
+    revenue: number;
+    orders: number;
+  }[];
+
+  recentOrders: any[];
+  lowStockProducts: any[];
+  outOfStockProducts: any[];
+
+  topProducts: {
+    name: string;
+    image: string;
+    sold: number;
+    revenue: number;
+  }[];
 };
 
-export default function Dashboard() {
-  const router = useRouter();
-
-  const [orders, setOrders] = useState<Order[]>([]);
+export default function DashboardPage() {
+  const [data, setData] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const loggedIn = localStorage.getItem("adminLoggedIn");
-
-    if (!loggedIn) {
-      router.push("/admin/login");
-      return;
-    }
-
-    fetchOrders();
-  }, [router]);
-
-  async function fetchOrders() {
+  async function loadDashboard() {
     try {
-      const res = await fetch("/api/orders");
-      const data = await res.json();
+      const res = await fetch("/api/admin/dashboard", {
+        cache: "no-store",
+      });
 
-      if (data.success) {
-        setOrders(data.orders);
+      const json = await res.json();
+      if (json.success) {
+        setData(json);
+      } else {
+        console.error("API returned failure:", json.message);
       }
     } catch (error) {
-      console.error(error);
+      console.error("Failed to fetch dashboard data:", error);
     } finally {
       setLoading(false);
     }
   }
 
-  async function updateStatus(id: string, orderStatus: string) {
+  useEffect(() => {
+    loadDashboard();
+  }, []);
+
+  async function handleRefresh() {
+    setLoading(true);
+    await loadDashboard();
+  }
+
+  async function handleLogout() {
     try {
-      const res = await fetch(`/api/orders/${id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          orderStatus,
-        }),
+      await fetch("/api/admin/logout", {
+        method: "POST",
       });
 
-      const data = await res.json();
-
-      if (data.success) {
-        fetchOrders();
-        alert("Order Status Updated Successfully");
-      } else {
-        alert(data.message);
-      }
+      window.location.href = "/admin/login";
     } catch (error) {
       console.error(error);
-      alert("Failed to update status");
+      alert("Logout Failed");
     }
   }
 
-  function logout() {
-    localStorage.removeItem("adminLoggedIn");
-    router.push("/admin/login");
-  }
+  // Monthly Sales Chart Data Formatting (0-11 numbers to Month Names)
+  const formattedChartData =
+    data?.monthlySales && data.monthlySales.length > 0
+      ? data.monthlySales.map((item) => {
+          const monthNames = [
+            "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+          ];
+          return {
+            date: monthNames[item.month] || `M${item.month + 1}`,
+            sales: item.revenue || 0,
+          };
+        })
+      : [];
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen text-2xl font-bold">
-        Loading...
+      <div className="p-8">
+        <div className="animate-pulse space-y-6">
+          <div className="h-10 w-72 rounded bg-gray-200" />
+
+          <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+            {Array.from({ length: 8 }).map((_, index) => (
+              <div
+                key={index}
+                className="h-36 rounded-2xl bg-gray-200"
+              />
+            ))}
+          </div>
+
+          <div className="h-[420px] rounded-2xl bg-gray-200" />
+        </div>
+      </div>
+    );
+  }
+
+  if (!data?.success) {
+    return (
+      <div className="flex h-[60vh] items-center justify-center">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-8 text-center shadow-sm">
+          <h2 className="text-xl font-bold text-red-700">
+            Dashboard Load Failed
+          </h2>
+          <p className="mt-2 text-gray-600">
+            Unable to fetch dashboard data or database is unreachable.
+          </p>
+          <button
+            onClick={handleRefresh}
+            className="mt-4 rounded-lg bg-red-600 px-4 py-2 font-semibold text-white hover:bg-red-700"
+          >
+            Try Again
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-6 py-10">
+    <div className="space-y-8 p-6 lg:p-8">
+      <DashboardHeader
+        onRefresh={handleRefresh}
+        onLogout={handleLogout}
+      />
 
-      <div className="flex justify-between items-center mb-10">
+      {/* 1. Overview Cards */}
+      <DashboardStats overview={data.overview} />
 
-        <h1 className="text-4xl font-bold text-green-900">
-          Himalayan Roots Admin
-        </h1>
-
-        <button
-          onClick={logout}
-          className="bg-red-600 hover:bg-red-700 text-white px-5 py-2 rounded-lg"
-        >
-          Logout
-        </button>
-
-      </div>
-
-      <div className="bg-green-700 text-white rounded-xl p-6 mb-8">
-
-        <h2 className="text-2xl font-bold">
-          Total Orders : {orders.length}
+      {/* 2. Sales Chart Section */}
+      <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+        <h2 className="text-xl font-bold text-gray-800 mb-6">
+          Sales Analytics
         </h2>
-
+        <SalesChart chartData={formattedChartData} />
       </div>
 
-      {orders.length === 0 ? (
-        <div className="text-center text-xl">
-          No Orders Found
+      {/* 3. Recent Orders & Quick Actions Grid */}
+      <div className="grid grid-cols-1 gap-8 xl:grid-cols-3">
+        <div className="xl:col-span-2">
+          <RecentOrders orders={data.recentOrders} />
         </div>
-      ) : (
-        <div className="space-y-6">
-
-          {orders.map((order) => (
-
-            <div
-              key={order._id}
-              className="bg-white rounded-xl shadow-lg border p-6"
-            >
-
-              <div className="grid md:grid-cols-2 gap-6">
-
-                <div>
-
-                  <h2 className="text-2xl font-bold text-green-900">
-                    {order.customer.name}
-                  </h2>
-
-                  <p>{order.customer.phone}</p>
-
-                  <p>{order.customer.address}</p>
-
-                  <p>
-                    {order.customer.city}, {order.customer.state}
-                  </p>
-
-                  <p>{order.customer.pincode}</p>
-
-                </div>
-
-                <div className="text-right">
-
-                  <h2 className="text-3xl font-bold text-green-700">
-                    ₹{order.totalAmount}
-                  </h2>
-
-                  <p className="mt-3">
-                    Payment :
-                    <span className="font-bold text-green-700 ml-2">
-                      {order.paymentStatus}
-                    </span>
-                  </p>
-
-                  <div className="mt-4">
-
-                    <label className="font-semibold mr-3">
-                      Order Status:
-                    </label>
-
-                    <select
-                      value={order.orderStatus}
-                      onChange={(e) =>
-                        updateStatus(
-                          order._id,
-                          e.target.value
-                        )
-                      }
-                      className="border rounded-lg px-3 py-2"
-                    >
-                      <option value="Pending">
-                        Pending
-                      </option>
-
-                      <option value="Processing">
-                        Processing
-                      </option>
-
-                      <option value="Shipped">
-                        Shipped
-                      </option>
-
-                      <option value="Delivered">
-                        Delivered
-                      </option>
-
-                      <option value="Cancelled">
-                        Cancelled
-                      </option>
-
-                    </select>
-
-                  </div>
-
-                  <p className="text-gray-500 mt-4">
-                    {new Date(order.createdAt).toLocaleString()}
-                  </p>
-
-                </div>
-
-              </div>
-
-            </div>
-
-          ))}
-
+        <div>
+          <QuickActions />
         </div>
-      )}
+      </div>
 
+      {/* 4. Low Stock Alerts */}
+      <LowStockProducts
+        lowStockProducts={data.lowStockProducts}
+        outOfStockProducts={data.outOfStockProducts}
+      />
+
+      {/* 5. Top Products */}
+      <TopProducts products={data.topProducts} />
     </div>
   );
 }

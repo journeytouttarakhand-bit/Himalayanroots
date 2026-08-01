@@ -8,14 +8,21 @@ export default function AdminLoginPage() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+
     const loggedIn = localStorage.getItem("adminLoggedIn");
 
     if (loggedIn === "true") {
       router.push("/admin/dashboard");
     }
-  }, [router]);
+  }, [mounted, router]);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();

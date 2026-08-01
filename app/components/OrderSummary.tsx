@@ -1,14 +1,39 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { CartItem } from "../context/CartContext";
 
 type OrderSummaryProps = {
   cart: CartItem[];
+
+  couponCode: string;
+
+  setCouponCode: React.Dispatch<
+    React.SetStateAction<string>
+  >;
+
+  discount: number;
+
+  setDiscount: React.Dispatch<
+    React.SetStateAction<number>
+  >;
+
+  totalAmount: number;
 };
 
 export default function OrderSummary({
   cart,
+
+  couponCode,
+
+  setCouponCode,
+
+  discount,
+
+  setDiscount,
+
+  totalAmount,
 }: OrderSummaryProps) {
   const subtotal = cart.reduce(
     (sum, item) => sum + item.price * item.quantity,
@@ -18,6 +43,81 @@ export default function OrderSummary({
   const shipping = subtotal >= 999 || subtotal === 0 ? 0 : 99;
 
   const grandTotal = subtotal + shipping;
+
+  const [loading, setLoading] =
+  useState(false);
+
+const [message, setMessage] =
+  useState("");
+
+const finalTotal =
+  Math.max(
+    0,
+    grandTotal - discount
+  );
+
+async function applyCoupon() {
+
+  if (!couponCode.trim()) {
+    alert("Enter coupon code.");
+    return;
+  }
+
+  setLoading(true);
+
+  setMessage("");
+
+  try {
+
+    const res = await fetch(
+      "/api/coupons/apply",
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type":
+            "application/json",
+        },
+
+        body: JSON.stringify({
+          code: couponCode,
+          amount: grandTotal,
+        }),
+      }
+    );
+
+    const data =
+      await res.json();
+
+    if (!data.success) {
+
+      alert(data.message);
+
+      setDiscount(0);
+
+      setLoading(false);
+
+      return;
+    }
+
+    setDiscount(data.discount);
+
+    setMessage(
+      "Coupon Applied Successfully ✅"
+    );
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      "Unable to apply coupon."
+    );
+
+  }
+
+  setLoading(false);
+}
 
   return (
     <div className="bg-green-50 rounded-2xl shadow-lg p-8 h-fit sticky top-24">
@@ -73,6 +173,70 @@ export default function OrderSummary({
             ))}
 
           </div>
+          {/* Coupon */}
+
+<div className="border rounded-xl p-4 bg-white">
+
+  <label className="font-semibold block mb-3">
+    Coupon Code
+  </label>
+
+  <div className="flex gap-3">
+
+    <input
+      type="text"
+      value={couponCode}
+      onChange={(e) =>
+        setCouponCode(
+          e.target.value.toUpperCase()
+        )
+      }
+      placeholder="Enter Coupon"
+      className="flex-1 border rounded-lg px-4 py-3"
+    />
+
+    <button
+      type="button"
+      onClick={applyCoupon}
+      disabled={loading}
+      className="bg-green-700 hover:bg-green-800 text-white px-5 rounded-lg disabled:opacity-50"
+    >
+      {loading
+        ? "Applying..."
+        : "Apply"}
+    </button>
+
+  </div>
+
+  {message && (
+
+    <p className="text-green-700 text-sm mt-3 font-medium">
+      {message}
+    </p>
+
+  )}
+
+  {discount > 0 && (
+
+    <button
+      type="button"
+      onClick={() => {
+
+        setCouponCode("");
+
+        setDiscount(0);
+
+        setMessage("");
+
+      }}
+      className="text-red-600 text-sm mt-3 hover:underline"
+    >
+      Remove Coupon
+    </button>
+
+  )}
+
+</div>
 
           <div className="border-t mt-8 pt-6 space-y-4">
 
@@ -101,11 +265,24 @@ export default function OrderSummary({
             </div>
 
             <div className="flex justify-between text-2xl font-bold border-t pt-4">
+              {discount > 0 && (
+
+  <div className="flex justify-between text-green-700 font-semibold">
+
+    <span>Discount</span>
+
+    <span>
+      - ₹{discount}
+    </span>
+
+  </div>
+
+)}
 
               <span>Grand Total</span>
 
               <span className="text-green-700">
-                ₹{grandTotal}
+                ₹{finalTotal}
               </span>
 
             </div>

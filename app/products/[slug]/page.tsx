@@ -2,8 +2,8 @@ import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { products } from "@/data/products";
-import { reviews } from "@/data/reviews";
+import ReviewForm from "@/app/components/ReviewForm";
+import ReviewList from "@/app/components/ReviewList";
 import RelatedProducts from "@/app/components/RelatedProducts";
 
 type Props = {
@@ -12,33 +12,63 @@ type Props = {
   }>;
 };
 
-export default async function ProductPage({ params }: Props) {
+type Product = {
+  _id: string;
+  name: string;
+  slug: string;
+  category: string;
+  description: string;
+  price: number;
+  stock: number;
+  inStock: boolean;
+  image: string;
+  rating: number;
+  featured: boolean;
+  active: boolean;
+};
+
+async function getProduct(
+  slug: string
+): Promise<Product | null> {
+  try {
+    const res = await fetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/all-products/${slug}`,
+      {
+        cache: "no-store",
+      }
+    );
+
+    if (!res.ok) {
+      return null;
+    }
+
+    const data = await res.json();
+
+    if (!data.success) {
+      return null;
+    }
+
+    return data.product;
+  } catch (error) {
+    console.error(error);
+    return null;
+  }
+}
+
+export default async function ProductPage({
+  params,
+}: Props) {
   const { slug } = await params;
 
-  const product = products.find((p) => p.slug === slug);
+  const product = await getProduct(slug);
 
   if (!product) {
     notFound();
   }
 
-  const productReviews = reviews.filter(
-    (review) => review.productSlug === slug
-  );
-
-  const averageRating =
-    productReviews.length > 0
-      ? (
-          productReviews.reduce(
-            (sum, review) => sum + review.rating,
-            0
-          ) / productReviews.length
-        ).toFixed(1)
-      : "0";
-
+  
   return (
     <div className="max-w-7xl mx-auto px-6 py-16">
-
-      {/* Breadcrumb */}
 
       <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600 mb-8">
 
@@ -66,27 +96,23 @@ export default async function ProductPage({ params }: Props) {
 
       </div>
 
-      {/* Navigation Buttons */}
-
       <div className="flex gap-4 mb-10">
 
         <Link
           href="/"
-          className="bg-gray-200 hover:bg-gray-300 px-6 py-3 rounded-xl font-semibold transition"
+          className="bg-gray-200 hover:bg-gray-300 px-6 py-3 rounded-xl font-semibold"
         >
           🏠 Home
         </Link>
 
         <Link
           href="/products"
-          className="bg-green-700 hover:bg-green-800 text-white px-6 py-3 rounded-xl font-semibold transition"
+          className="bg-green-700 hover:bg-green-800 text-white px-6 py-3 rounded-xl font-semibold"
         >
           📦 All Products
         </Link>
 
       </div>
-
-      {/* Product Section */}
 
       <div className="grid md:grid-cols-2 gap-12">
 
@@ -111,16 +137,25 @@ export default async function ProductPage({ params }: Props) {
           <p className="text-gray-500 mt-3">
             {product.category}
           </p>
-
           <div className="flex items-center gap-6 mt-5">
 
             <span className="text-yellow-500 text-xl">
               ⭐ {product.rating}
             </span>
 
-            <span className="text-green-700 font-semibold">
-              {product.stock}
-            </span>
+            {product.inStock ? (
+
+              <span className="bg-green-100 text-green-700 px-4 py-2 rounded-full font-semibold">
+                ✅ {product.stock} In Stock
+              </span>
+
+            ) : (
+
+              <span className="bg-red-100 text-red-700 px-4 py-2 rounded-full font-semibold">
+                ❌ Out of Stock
+              </span>
+
+            )}
 
           </div>
 
@@ -132,93 +167,50 @@ export default async function ProductPage({ params }: Props) {
             {product.description}
           </p>
 
-          <a
-            href="https://wa.me/917895943324"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block mt-10 bg-green-700 hover:bg-green-800 text-white px-8 py-4 rounded-xl font-semibold transition"
-          >
-            Order on WhatsApp
-          </a>
+          {product.inStock ? (
+
+            <a
+              href="https://wa.me/917895943324"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-block mt-10 bg-green-700 hover:bg-green-800 text-white px-8 py-4 rounded-xl font-semibold transition"
+            >
+              Order on WhatsApp
+            </a>
+
+          ) : (
+
+            <button
+              disabled
+              className="inline-block mt-10 bg-gray-400 cursor-not-allowed text-white px-8 py-4 rounded-xl font-semibold"
+            >
+              Out of Stock
+            </button>
+
+          )}
 
         </div>
 
       </div>
 
-      {/* Reviews */}
+{/* Reviews */}
 
-      <section className="mt-24">
+<div className="mt-24">
 
-        <h2 className="text-4xl font-bold text-green-900 mb-4">
-          Customer Reviews
-        </h2>
+  <ReviewForm
+    productId={product._id}
+  />
 
-        <div className="flex items-center gap-3 mb-10">
+  <ReviewList
+    productId={product._id}
+  />
 
-          <span className="text-2xl text-yellow-500">
-            ⭐ {averageRating}
-          </span>
-
-          <span className="text-gray-600">
-            ({productReviews.length} Reviews)
-          </span>
-
-        </div>
-
-        {productReviews.length === 0 ? (
-
-          <div className="bg-gray-100 rounded-xl p-8 text-center">
-
-            <p className="text-gray-600">
-              No reviews available.
-            </p>
-
-          </div>
-
-        ) : (
-
-          <div className="space-y-6">
-
-            {productReviews.map((review) => (
-
-              <div
-                key={review.id}
-                className="bg-white rounded-2xl shadow-md border p-6"
-              >
-
-                <div className="flex justify-between items-center">
-
-                  <h3 className="font-bold text-xl">
-                    {review.name}
-                  </h3>
-
-                  <span className="text-sm text-gray-500">
-                    {review.date}
-                  </span>
-
-                </div>
-
-                <div className="mt-2 text-yellow-500 text-lg">
-                  {"⭐".repeat(review.rating)}
-                </div>
-
-                <p className="mt-4 text-gray-700 leading-7">
-                  {review.comment}
-                </p>
-
-              </div>
-
-            ))}
-
-          </div>
-
-        )}
-
-      </section>
-
+</div>
       {/* Related Products */}
 
-      <RelatedProducts currentSlug={slug} />
+      <RelatedProducts
+        currentSlug={product.slug}
+      />
 
     </div>
   );

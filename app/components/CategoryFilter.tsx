@@ -1,21 +1,15 @@
 "use client";
 
+import { Dispatch, SetStateAction } from "react";
+
 type CategoryFilterProps = {
+  categories: string[];
   selectedCategory: string;
-  setSelectedCategory: (category: string) => void;
+  setSelectedCategory: Dispatch<SetStateAction<string>> | ((category: string) => void);
 };
 
-const categories = [
-  "All",
-  "Ghee",
-  "Honey",
-  "Pulses",
-  "Sweets",
-  "Fruits",
-  "Vegetables",
-];
-
 export default function CategoryFilter({
+  categories,
   selectedCategory,
   setSelectedCategory,
 }: CategoryFilterProps) {
@@ -24,10 +18,11 @@ export default function CategoryFilter({
       {categories.map((category) => (
         <button
           key={category}
+          type="button"
           onClick={() => setSelectedCategory(category)}
-          className={`px-5 py-2 rounded-full font-semibold transition ${
+          className={`px-5 py-2 rounded-full font-semibold transition cursor-pointer ${
             selectedCategory === category
-              ? "bg-green-700 text-white"
+              ? "bg-green-700 text-white shadow-sm"
               : "bg-white border border-green-700 text-green-700 hover:bg-green-100"
           }`}
         >

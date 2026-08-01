@@ -3,6 +3,9 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  /* Fallback CMS Colors in case JS hasn't loaded yet */
+  --primary-color: #166534;
+  --secondary-color: #65a30d;
 }
 
 @theme inline {
@@ -23,4 +26,52 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* ========================================= */
+/* CMS Dynamic Color Utility Classes         */
+/* ========================================= */
+
+/* Primary Dynamic Colors */
+.bg-primary {
+  background-color: var(--primary-color) !important;
+}
+
+.text-primary {
+  color: var(--primary-color) !important;
+}
+
+.border-primary {
+  border-color: var(--primary-color) !important;
+}
+
+.hover\:bg-primary:hover {
+  background-color: var(--primary-color) !important;
+  opacity: 0.9;
+}
+
+.hover\:text-primary:hover {
+  color: var(--primary-color) !important;
+}
+
+/* Secondary Dynamic Colors */
+.bg-secondary {
+  background-color: var(--secondary-color) !important;
+}
+
+.text-secondary {
+  color: var(--secondary-color) !important;
+}
+
+.border-secondary {
+  border-color: var(--secondary-color) !important;
+}
+
+.hover\:bg-secondary:hover {
+  background-color: var(--secondary-color) !important;
+  opacity: 0.9;
+}
+
+.hover\:text-secondary:hover {
+  color: var(--secondary-color) !important;
 }
