@@ -58,6 +58,9 @@ export default function AppearancePage() {
   const [footerAboutText, setFooterAboutText] = useState("");
   const [copyrightText, setCopyrightText] = useState("");
 
+  // ➕ NEW: Font Family State
+  const [fontFamily, setFontFamily] = useState("Inter");
+
   // Hero Section Settings States
   const [heroImage, setHeroImage] = useState("");
   const [heroTitle, setHeroTitle] = useState("");
@@ -67,6 +70,19 @@ export default function AppearancePage() {
   const [aboutImage, setAboutImage] = useState("");
   const [aboutTitle, setAboutTitle] = useState("");
   const [aboutDescription, setAboutDescription] = useState("");
+
+  // ➕ Contact Information States
+  const [contactPhone, setContactPhone] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [address, setAddress] = useState("");
+  const [workingHours, setWorkingHours] = useState("");
+
+  // ➕ Social Media Links States
+  const [facebookUrl, setFacebookUrl] = useState("");
+  const [instagramUrl, setInstagramUrl] = useState("");
+  const [twitterUrl, setTwitterUrl] = useState("");
+  const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [whatsappNumber, setWhatsappNumber] = useState("");
 
   useEffect(() => {
     loadSettings();
@@ -88,15 +104,31 @@ export default function AppearancePage() {
         setFooterAboutText(data.settings.footerAboutText || "");
         setCopyrightText(data.settings.copyrightText || "");
 
+        // ➕ Load Font
+        setFontFamily(data.settings.fontFamily || "Inter");
+
         // Load Hero Settings
         setHeroImage(data.settings.heroImage || "");
         setHeroTitle(data.settings.heroTitle || "");
         setHeroSubtitle(data.settings.heroSubtitle || "");
 
-        // 🌟 Fixed: Properly mapped About Settings from API
+        // 🌟 Load About Settings
         setAboutImage(data.settings.aboutImage || "");
         setAboutTitle(data.settings.aboutTitle || "");
         setAboutDescription(data.settings.aboutDescription || "");
+
+        // ➕ Load Contact Information
+        setContactPhone(data.settings.contactPhone || "");
+        setContactEmail(data.settings.contactEmail || "");
+        setAddress(data.settings.address || "");
+        setWorkingHours(data.settings.workingHours || "");
+
+        // ➕ Load Social Links
+        setFacebookUrl(data.settings.facebookUrl || "");
+        setInstagramUrl(data.settings.instagramUrl || "");
+        setTwitterUrl(data.settings.twitterUrl || "");
+        setYoutubeUrl(data.settings.youtubeUrl || "");
+        setWhatsappNumber(data.settings.whatsappNumber || "");
       }
     } catch (error) {
       console.error("Error loading settings:", error);
@@ -189,6 +221,7 @@ export default function AppearancePage() {
           footerTextColor,
           footerAboutText,
           copyrightText,
+          fontFamily, // ➕ Save Font
           heroImage,
           heroTitle,
           heroSubtitle,
@@ -196,6 +229,17 @@ export default function AppearancePage() {
           aboutImage,
           aboutTitle,
           aboutDescription,
+          // ➕ Save Contact Settings
+          contactPhone,
+          contactEmail,
+          address,
+          workingHours,
+          // ➕ Save Social Settings
+          facebookUrl,
+          instagramUrl,
+          twitterUrl,
+          youtubeUrl,
+          whatsappNumber,
         }),
       });
 
@@ -231,7 +275,7 @@ export default function AppearancePage() {
 
       <CMSHeader
         title="Appearance & Theme Settings"
-        description="Customize logos, hero banner, about section, themes, and footer."
+        description="Customize logos, hero banner, fonts, about section, themes, contact info, social links, and footer."
       />
 
       {/* Quick Theme Presets */}
@@ -379,13 +423,140 @@ export default function AppearancePage() {
         </div>
       </div>
 
-      {/* Main Colors Section */}
+      {/* ➕ CONTACT INFORMATION SECTION */}
       <div className="rounded-2xl border bg-white p-6 shadow-sm space-y-6">
-        <h2 className="text-lg font-bold text-gray-900">🎨 Primary & Text Colors</h2>
+        <h2 className="text-lg font-bold text-gray-900">📞 Contact & Support Details</h2>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700">Phone Number</label>
+            <input
+              type="text"
+              className="mt-1 w-full rounded-xl border p-3 text-sm"
+              placeholder="+91 9876543210"
+              value={contactPhone}
+              onChange={(e) => setContactPhone(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700">Support Email</label>
+            <input
+              type="email"
+              className="mt-1 w-full rounded-xl border p-3 text-sm"
+              placeholder="support@himalayanroots.com"
+              value={contactEmail}
+              onChange={(e) => setContactEmail(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700">Working Hours</label>
+            <input
+              type="text"
+              className="mt-1 w-full rounded-xl border p-3 text-sm"
+              placeholder="Mon - Sat: 9:00 AM - 7:00 PM"
+              value={workingHours}
+              onChange={(e) => setWorkingHours(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700">Office / Store Address</label>
+            <input
+              type="text"
+              className="mt-1 w-full rounded-xl border p-3 text-sm"
+              placeholder="Dehradun, Uttarakhand, India"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* ➕ SOCIAL MEDIA LINKS SECTION */}
+      <div className="rounded-2xl border bg-white p-6 shadow-sm space-y-6">
+        <h2 className="text-lg font-bold text-gray-900">🌐 Social Media Accounts</h2>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700">Facebook URL</label>
+            <input
+              type="url"
+              className="mt-1 w-full rounded-xl border p-3 text-sm"
+              placeholder="https://facebook.com/yourpage"
+              value={facebookUrl}
+              onChange={(e) => setFacebookUrl(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700">Instagram URL</label>
+            <input
+              type="url"
+              className="mt-1 w-full rounded-xl border p-3 text-sm"
+              placeholder="https://instagram.com/yourprofile"
+              value={instagramUrl}
+              onChange={(e) => setInstagramUrl(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700">Twitter (X) URL</label>
+            <input
+              type="url"
+              className="mt-1 w-full rounded-xl border p-3 text-sm"
+              placeholder="https://twitter.com/yourhandle"
+              value={twitterUrl}
+              onChange={(e) => setTwitterUrl(e.target.value)}
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-semibold text-gray-700">YouTube URL</label>
+            <input
+              type="url"
+              className="mt-1 w-full rounded-xl border p-3 text-sm"
+              placeholder="https://youtube.com/@yourchannel"
+              value={youtubeUrl}
+              onChange={(e) => setYoutubeUrl(e.target.value)}
+            />
+          </div>
+          <div className="md:col-span-2">
+            <label className="block text-sm font-semibold text-gray-700">WhatsApp Number (with Country Code)</label>
+            <input
+              type="text"
+              className="mt-1 w-full rounded-xl border p-3 text-sm"
+              placeholder="+919876543210"
+              value={whatsappNumber}
+              onChange={(e) => setWhatsappNumber(e.target.value)}
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Main Colors & Typography Section (UPDATED WITH FONT DROPDOWN) */}
+      <div className="rounded-2xl border bg-white p-6 shadow-sm space-y-6">
+        <h2 className="text-lg font-bold text-gray-900">🎨 Primary, Text Colors & Typography</h2>
+        
         <div className="grid gap-6 md:grid-cols-3">
           <ColorPicker label="Primary Brand Color" value={primaryColor} onChange={setPrimaryColor} />
           <ColorPicker label="Secondary Accent Color" value={secondaryColor} onChange={setSecondaryColor} />
           <ColorPicker label="Body Text Color" value={textColor} onChange={setTextColor} />
+        </div>
+
+        {/* ➕ FONT FAMILY DROPDOWN */}
+        <div className="pt-4 border-t">
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            🔤 Website Font Family
+          </label>
+          <select
+            value={fontFamily}
+            onChange={(e) => setFontFamily(e.target.value)}
+            className="w-full max-w-md rounded-xl border border-gray-300 p-3 text-sm font-medium text-gray-900 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-700"
+          >
+            <option value="Inter">Inter (Clean & Modern)</option>
+            <option value="Poppins">Poppins (Friendly & Rounded)</option>
+            <option value="Roboto">Roboto (Classic Sans)</option>
+            <option value="Playfair Display">Playfair Display (Premium Serif)</option>
+            <option value="Outfit">Outfit (Sleek & Bold)</option>
+            <option value="Montserrat">Montserrat (Geometric)</option>
+          </select>
+          <p className="mt-1.5 text-xs text-gray-500">
+            Select the primary font family for titles and body text across your website.
+          </p>
         </div>
       </div>
 

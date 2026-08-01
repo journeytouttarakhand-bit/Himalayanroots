@@ -1,6 +1,6 @@
 import { unstable_noStore as noStore } from "next/cache";
 import connectToDatabase from "@/lib/mongodb";
-import SiteSettings from "@/database/SiteSettings"; // 👈 Exact correct path according to your structure
+import SiteSettings from "@/database/SiteSettings"; // 
 
 export default async function getSiteSettings() {
   // Disable Next.js data caching so every request fetches fresh DB values

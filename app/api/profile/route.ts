@@ -1,22 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
-
 import connectDB from "@/lib/mongodb";
 import User from "@/database/User";
 import { verifyToken } from "@/lib/auth";
 
-export async function PUT(
-  request: NextRequest
-) {
+export async function PUT(request: NextRequest) {
   try {
-
     await connectDB();
 
-    const token =
-      request.cookies.get("token")
-        ?.value;
+    const token = request.cookies.get("token")?.value;
 
     if (!token) {
-
       return NextResponse.json(
         {
           success: false,
@@ -26,14 +19,11 @@ export async function PUT(
           status: 401,
         }
       );
-
     }
 
-    const decoded: any =
-      verifyToken(token);
+    const decoded: any = verifyToken(token);
 
-    if (!decoded) {
-
+    if (!decoded || !decoded.id) {
       return NextResponse.json(
         {
           success: false,
@@ -43,68 +33,76 @@ export async function PUT(
           status: 401,
         }
       );
-
     }
 
-    const body =
-      await request.json();
+    const body = await request.json();
 
     const {
       name,
       phone,
+      altPhone,
+      gender,
+      dob,
+      avatar,
+      address,
+      locality,
+      landmark,
+      city,
+      state,
+      pincode,
     } = body;
 
-    const user =
-      await User.findById(
-        decoded.id
-      );
+    // Construct update payload safely
+    const updateData: Record<string, any> = {};
 
-    if (!user) {
+    if (name !== undefined) updateData.name = name;
+    if (phone !== undefined) updateData.phone = phone;
+    if (altPhone !== undefined) updateData.altPhone = altPhone;
+    if (gender !== undefined) updateData.gender = gender;
+    if (dob !== undefined) updateData.dob = dob;
+    if (avatar !== undefined) updateData.avatar = avatar;
+    if (address !== undefined) updateData.address = address;
+    if (locality !== undefined) updateData.locality = locality;
+    if (landmark !== undefined) updateData.landmark = landmark;
+    if (city !== undefined) updateData.city = city;
+    if (state !== undefined) updateData.state = state;
+    if (pincode !== undefined) updateData.pincode = pincode;
 
+    // Use direct atomic update to prevent Mongoose document validation errors
+    const updatedUser = await User.findByIdAndUpdate(
+      decoded.id,
+      { $set: updateData },
+      { new: true, runValidators: false }
+    ).select("-password");
+
+    if (!updatedUser) {
       return NextResponse.json(
         {
           success: false,
-          message:
-            "User not found.",
+          message: "User not found.",
         },
         {
           status: 404,
         }
       );
-
     }
 
-    user.name = name;
-    user.phone = phone;
-
-    await user.save();
-
     return NextResponse.json({
-
       success: true,
-
-      message:
-        "Profile updated successfully.",
-
-      user,
-
+      message: "Profile updated successfully.",
+      user: updatedUser,
     });
-
-  } catch (error) {
-
-    console.error(error);
+  } catch (error: any) {
+    console.error("Profile update error:", error);
 
     return NextResponse.json(
       {
         success: false,
-        message:
-          "Failed to update profile.",
+        message: error?.message || "Failed to update profile.",
       },
       {
         status: 500,
       }
     );
-
   }
-
 }

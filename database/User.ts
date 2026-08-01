@@ -1,20 +1,26 @@
-import mongoose, {
-  Schema,
-  model,
-  models,
-} from "mongoose";
+import mongoose, { Schema, model, models } from "mongoose";
 
-export interface IUser
-  extends mongoose.Document {
+export interface IUser extends mongoose.Document {
   name: string;
   email: string;
   phone: string;
   password: string;
-
   avatar: string;
 
-  role: "customer" | "admin";
+  // ➕ Profile Extended Fields
+  altPhone?: string;
+  gender?: string;
+  dob?: string;
 
+  // ➕ Direct Address Fields
+  address?: string;
+  locality?: string;
+  landmark?: string;
+  city?: string;
+  state?: string;
+  pincode?: string;
+
+  role: "customer" | "admin";
   isVerified: boolean;
 
   addresses: {
@@ -37,7 +43,6 @@ const UserSchema = new Schema(
     //----------------------------------
     // Basic Details
     //----------------------------------
-
     name: {
       type: String,
       required: true,
@@ -68,32 +73,74 @@ const UserSchema = new Schema(
       default: "",
     },
 
+    // ➕ Extended Profile Details
+    altPhone: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+
+    gender: {
+      type: String,
+      default: "Male",
+    },
+
+    dob: {
+      type: String,
+      default: "",
+    },
+
+    // ➕ Flat Delivery Address Fields
+    address: {
+      type: String,
+      default: "",
+    },
+
+    locality: {
+      type: String,
+      default: "",
+    },
+
+    landmark: {
+      type: String,
+      default: "",
+    },
+
+    city: {
+      type: String,
+      default: "",
+    },
+
+    state: {
+      type: String,
+      default: "",
+    },
+
+    pincode: {
+      type: String,
+      default: "",
+    },
+
     //----------------------------------
     // Role
     //----------------------------------
-
     role: {
       type: String,
-      enum: [
-        "customer",
-        "admin",
-      ],
+      enum: ["customer", "admin"],
       default: "customer",
     },
 
     //----------------------------------
     // Verification
     //----------------------------------
-
     isVerified: {
       type: Boolean,
       default: true,
     },
 
     //----------------------------------
-    // Addresses
+    // Addresses Array (Multiple Saved Addresses)
     //----------------------------------
-
     addresses: [
       {
         fullName: {
@@ -140,14 +187,10 @@ const UserSchema = new Schema(
   },
   {
     timestamps: true,
+    strict: false, // Prevents throwing errors if unexpected fields arrive
   }
 );
 
-const User =
-  models.User ||
-  model<IUser>(
-    "User",
-    UserSchema
-  );
+const User = models.User || model<IUser>("User", UserSchema);
 
 export default User;

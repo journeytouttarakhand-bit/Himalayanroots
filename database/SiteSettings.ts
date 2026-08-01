@@ -58,6 +58,9 @@ export interface ISiteSettings extends Document {
   metaDescription?: string;
   keywords?: string;
 
+  // Maintenance
+  maintenanceMode?: boolean;
+
   // FAQs
   faqs?: IFAQ[];
 }
@@ -109,6 +112,8 @@ const SiteSettingsSchema = new Schema(
     metaDescription: { type: String, default: "" },
     keywords: { type: String, default: "" },
 
+    maintenanceMode: { type: Boolean, default: false },
+
     faqs: [
       {
         question: { type: String, default: "" },
@@ -123,7 +128,7 @@ const SiteSettingsSchema = new Schema(
 );
 
 const SiteSettings =
-  mongoose.models.SiteSettings ||
+  (mongoose.models && mongoose.models.SiteSettings) ||
   mongoose.model<ISiteSettings>("SiteSettings", SiteSettingsSchema);
 
 export default SiteSettings;

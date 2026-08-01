@@ -1,29 +1,67 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import connectDB from "@/lib/mongodb";
 import Order from "@/database/Order";
 import Product from "@/database/Product";
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   try {
     await connectDB();
 
-    // Total Orders & Revenue
-    const orders = await Order.find().lean();
+    // Query parameters se dates retrieve karein
+    const { searchParams } = new URL(req.url);
+    const fromDate = searchParams.get("fromDate");
+    const toDate = searchParams.get("toDate");
+
+    // Dynamic Filter Query Build Karein
+    const dateQuery: any = {};
+
+    if (fromDate || toDate) {
+      dateQuery.createdAt = {};
+
+      if (fromDate) {
+        const start = new Date(fromDate);
+        start.setHours(0, 0, 0, 0);
+        dateQuery.createdAt.$gte = start;
+      }
+
+      if (toDate) {
+        const end = new Date(toDate);
+        end.setHours(23, 59, 59, 999);
+        dateQuery.createdAt.$lte = end;
+      }
+    }
+
+    // Filtered orders fetch karein
+    const orders = await Order.find(dateQuery).lean();
     const totalOrders = orders.length;
-    const totalRevenue = orders.reduce((sum, order) => sum + (order.finalAmount || 0), 0);
+    const totalRevenue = orders.reduce(
+      (sum, order) => sum + (order.finalAmount || 0),
+      0
+    );
 
     // Unique Customers
-    const uniqueCustomers = new Set(orders.map((order) => order.customer?.phone)).size;
+    const uniqueCustomers = new Set(
+      orders.map((order) => order.customer?.phone).filter(Boolean)
+    ).size;
 
     // Total Products Sold
     const totalProductsSold = orders.reduce((sum, order) => {
-      return sum + (order.items?.reduce((itemSum: number, item: any) => itemSum + (item.quantity || 0), 0) || 0);
+      return (
+        sum +
+        (order.items?.reduce(
+          (itemSum: number, item: any) => itemSum + (item.quantity || 0),
+          0
+        ) || 0)
+      );
     }, 0);
 
-    // Recent Orders (last 10)
+    // Recent Orders (Filtered environment me sabhi recent order sort karke max 20)
     const recentOrders = orders
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-      .slice(0, 10);
+      .sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      )
+      .slice(0, 50); // Increased slice limit so export has complete filtered history
 
     // Order Status Breakdown
     const orderStatus = {
@@ -41,10 +79,13 @@ export async function GET() {
     };
 
     // Top Selling Products
-    const productSalesMap = new Map<string, { name: string; quantity: number; revenue: number }>();
+    const productSalesMap = new Map<
+      string,
+      { name: string; quantity: number; revenue: number }
+    >();
     orders.forEach((order) => {
       order.items?.forEach((item: any) => {
-        const key = item.id;
+        const key = item.id || item.name;
         if (productSalesMap.has(key)) {
           const existing = productSalesMap.get(key)!;
           existing.quantity += item.quantity || 0;
@@ -64,7 +105,10 @@ export async function GET() {
       .slice(0, 5);
 
     // Top Customers
-    const customerMap = new Map<string, { name: string; orders: number; spent: number }>();
+    const customerMap = new Map<
+      string,
+      { name: string; orders: number; spent: number }
+    >();
     orders.forEach((order) => {
       const phone = order.customer?.phone;
       const name = order.customer?.name || "Unknown";

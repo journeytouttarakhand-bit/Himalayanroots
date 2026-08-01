@@ -1,134 +1,233 @@
-import Link from "next/link";
+"use client";
+
+import { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import {
+  Search,
+  Heart,
+  ShoppingBag,
+  User,
+  LogOut,
+  Package,
+  MapPin,
+  ChevronDown,
+} from "lucide-react";
 
-import getSiteSettings from "@/lib/getSiteSettings";
-import HeaderIcons from "./HeaderIcons";
-import SearchBar from "./SearchBar";
+type UserType = {
+  _id: string;
+  name: string;
+  email: string;
+  avatar?: string;
+};
 
-export default async function Header() {
-  const settings = (await getSiteSettings()) || {};
+export default function Header() {
+  const [user, setUser] = useState<UserType | null>(null);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  const logoSrc = settings.logo || "/logo.png";
-  const siteName = settings.siteName || "Himalayan Roots";
-  const tagline = settings.tagline || "Pure & Organic Himalayan Products";
-  const phoneNumber = settings.phone || settings.contactPhone || "+91 XXXXX XXXXX";
+  useEffect(() => {
+    checkAuth();
+  }, []);
+
+  async function checkAuth() {
+    try {
+      const res = await fetch("/api/auth/me", { cache: "no-store" });
+      const data = await res.json();
+      if (data.success && data.user) {
+        setUser(data.user);
+      } else {
+        setUser(null);
+      }
+    } catch (error) {
+      console.error("Auth check failed:", error);
+    }
+  }
+
+  async function handleLogout() {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+      setUser(null);
+      window.location.href = "/login";
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
+  }
 
   return (
-    <header className="sticky top-0 z-50 bg-white shadow-sm">
-      {/* Announcement Bar */}
-      {settings.announcementEnabled && (
-        <div
-          className="py-2 text-sm"
-          style={{
-            backgroundColor: settings.announcementBackground || "var(--primary-color, #166534)",
-            color: settings.announcementTextColor || "#ffffff",
-          }}
-        >
-          <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-4 md:flex-row">
-            <span className="font-medium">
-              {settings.announcementText || "🚚 Free Shipping on Orders Above ₹999"}
-            </span>
+    <header className="w-full border-b bg-white sticky top-0 z-50 shadow-sm">
+      {/* Top Announcement Bar */}
+      <div className="bg-emerald-900 px-4 py-1.5 text-center text-xs font-medium text-white">
+        🚚 Free Shipping on Orders Above ₹999
+      </div>
 
-            {settings.announcementButtonText && settings.announcementLink && (
-              <Link
-                href={settings.announcementLink}
-                className="rounded-full border border-white/40 px-4 py-1 text-xs font-semibold transition hover:bg-white hover:text-black"
-              >
-                {settings.announcementButtonText}
-              </Link>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Main Header */}
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3 gap-4">
-        {/* Logo & Branding */}
-        <Link href="/" className="flex items-center gap-4 group shrink-0">
-          <div className="relative h-12 sm:h-14 w-auto flex items-center">
+      {/* Main Navigation Header */}
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 md:px-8">
+        {/* Logo Section */}
+        <Link href="/" className="flex items-center gap-3">
+          <div className="relative h-12 w-12 overflow-hidden">
             <Image
-              src={logoSrc}
-              alt={siteName}
-              width={160}
-              height={70}
-              className="h-full w-auto object-contain transition-transform group-hover:scale-105"
-              priority
+              src="/logo.png"
+              alt="Himalayan Roots Logo"
+              fill
+              className="object-contain"
             />
           </div>
-
-          <div className="hidden sm:block">
-            <h1 className="text-xl font-bold text-primary tracking-tight">
-              {siteName}
-            </h1>
-            {tagline && (
-              <p className="text-xs font-medium text-gray-500">
-                {tagline}
-              </p>
-            )}
+          <div>
+            <span className="text-xl font-bold tracking-tight text-emerald-950 block">
+              Himalayan Roots
+            </span>
+            <span className="text-[10px] font-semibold text-emerald-700 tracking-wider uppercase block -mt-1">
+              Pure Taste of Uttarakhand
+            </span>
           </div>
         </Link>
 
-        {/* Desktop Navigation */}
-        <nav className="hidden items-center gap-6 lg:flex text-gray-700">
-          <Link href="/" className="font-semibold transition hover:text-primary">
+        {/* Navigation Links */}
+        <nav className="hidden md:flex items-center gap-8 text-sm font-semibold text-gray-700">
+          <Link href="/" className="hover:text-emerald-700 transition-colors">
             Home
           </Link>
-          <Link href="/products" className="font-semibold transition hover:text-primary">
+          <Link href="/products" className="hover:text-emerald-700 transition-colors">
             Products
           </Link>
-          <Link href="/about" className="font-semibold transition hover:text-primary">
+          <Link href="/about" className="hover:text-emerald-700 transition-colors">
             About
           </Link>
-          {/* 🌟 Blog Link Added */}
-          <Link href="/blog" className="font-semibold transition hover:text-primary">
+          <Link href="/blog" className="hover:text-emerald-700 transition-colors">
             Blog
           </Link>
-          <Link href="/contact" className="font-semibold transition hover:text-primary">
+          <Link href="/contact" className="hover:text-emerald-700 transition-colors">
             Contact
           </Link>
         </nav>
 
-        {/* Search Bar (Desktop) */}
-        <div className="hidden md:block flex-1 max-w-xs">
-          <SearchBar />
+        {/* Search Bar */}
+        <div className="hidden lg:flex items-center rounded-full border border-gray-200 bg-gray-50 px-4 py-2 w-72 focus-within:border-emerald-600 focus-within:bg-white transition-all">
+          <input
+            type="text"
+            placeholder="Search products..."
+            className="w-full bg-transparent text-sm text-gray-800 focus:outline-none"
+          />
+          <Search size={18} className="text-gray-400" />
         </div>
 
-        {/* Right Side Info & Header Icons */}
-        <div className="flex items-center gap-4 shrink-0">
-          <div className="hidden text-right xl:block">
-            <p className="text-xs text-gray-500 font-medium">Contact Us</p>
-            <p className="font-bold text-primary text-sm">
-              {phoneNumber}
-            </p>
-          </div>
+        {/* Right Side Icons & Actions */}
+        <div className="flex items-center gap-4">
+          {/* Wishlist */}
+          <Link
+            href="/wishlist"
+            className="p-2 text-gray-700 hover:text-emerald-700 transition-colors relative"
+            title="Wishlist"
+          >
+            <Heart size={22} />
+          </Link>
 
-          <HeaderIcons />
-        </div>
-      </div>
+          {/* Cart */}
+          <Link
+            href="/cart"
+            className="p-2 text-gray-700 hover:text-emerald-700 transition-colors relative"
+            title="Shopping Cart"
+          >
+            <ShoppingBag size={22} />
+          </Link>
 
-      {/* Mobile Search Bar & Navigation */}
-      <div className="border-t bg-white p-2 space-y-2 md:hidden">
-        <div className="px-2">
-          <SearchBar />
+          {/* DYNAMIC USER SECTION */}
+          {user ? (
+            <div className="relative">
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="flex items-center gap-2 rounded-full bg-emerald-100 border border-emerald-300 px-3.5 py-1.5 text-xs font-bold text-emerald-900 hover:bg-emerald-200 transition-all cursor-pointer"
+              >
+                {/* Profile Avatar / First Letter Fallback */}
+                <div className="flex h-7 w-7 items-center justify-center overflow-hidden rounded-full bg-emerald-800 text-white text-[11px] font-bold">
+                  {user.avatar ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                      src={user.avatar}
+                      alt={user.name}
+                      className="h-full w-full object-cover"
+                    />
+                  ) : (
+                    user.name.charAt(0).toUpperCase()
+                  )}
+                </div>
+                <span className="max-w-[100px] truncate capitalize">{user.name}</span>
+                <ChevronDown size={14} className={`text-emerald-800 transition-transform ${dropdownOpen ? "rotate-180" : ""}`} />
+              </button>
+
+              {/* Dropdown Menu */}
+              {dropdownOpen && (
+                <div className="absolute right-0 mt-2 w-56 rounded-2xl border border-gray-100 bg-white p-2 shadow-xl z-50 divide-y divide-gray-100">
+                  {/* User Account Info */}
+                  <div className="px-3 py-2.5">
+                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">YOUR ACCOUNT</p>
+                    <p className="text-sm font-bold text-gray-900 truncate mt-0.5">{user.name}</p>
+                    <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                  </div>
+
+                  {/* Clean Selected Options */}
+                  <div className="py-1 space-y-0.5">
+                    <Link
+                      href="/profile"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-emerald-50 hover:text-emerald-800 transition"
+                    >
+                      <User size={16} className="text-gray-500" />
+                      My Profile
+                    </Link>
+
+                    <Link
+                      href="/profile?tab=orders"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-emerald-50 hover:text-emerald-800 transition"
+                    >
+                      <Package size={16} className="text-gray-500" />
+                      My Orders
+                    </Link>
+
+                    <Link
+                      href="/profile?tab=addresses"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-emerald-50 hover:text-emerald-800 transition"
+                    >
+                      <MapPin size={16} className="text-gray-500" />
+                      Saved Address
+                    </Link>
+
+                    <Link
+                      href="/wishlist"
+                      onClick={() => setDropdownOpen(false)}
+                      className="flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-emerald-50 hover:text-emerald-800 transition"
+                    >
+                      <Heart size={16} className="text-gray-500" />
+                      Wishlist
+                    </Link>
+                  </div>
+
+                  {/* Logout Button */}
+                  <div className="pt-1">
+                    <button
+                      onClick={handleLogout}
+                      className="flex w-full items-center gap-3 rounded-xl px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50 transition cursor-pointer"
+                    >
+                      <LogOut size={16} />
+                      Logout
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link
+              href="/login"
+              className="flex items-center gap-2 rounded-full border border-emerald-700 px-3.5 py-1.5 text-xs font-bold text-emerald-800 hover:bg-emerald-800 hover:text-white transition-all shadow-sm"
+              title="Customer Login / Register"
+            >
+              <User size={16} />
+              <span>Login</span>
+            </Link>
+          )}
         </div>
-        <nav className="flex items-center justify-around py-1 text-sm font-semibold">
-          <Link href="/" className="transition hover:text-primary">
-            Home
-          </Link>
-          <Link href="/products" className="transition hover:text-primary">
-            Products
-          </Link>
-          <Link href="/about" className="transition hover:text-primary">
-            About
-          </Link>
-          {/* 🌟 Mobile Blog Link Added */}
-          <Link href="/blog" className="transition hover:text-primary">
-            Blog
-          </Link>
-          <Link href="/contact" className="transition hover:text-primary">
-            Contact
-          </Link>
-        </nav>
       </div>
     </header>
   );
